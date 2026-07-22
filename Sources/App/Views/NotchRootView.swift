@@ -23,68 +23,70 @@ struct NotchRootView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            switch runtime.surface {
-            case .compact:
-                CompactStatusView(
-                    store: runtime.store,
-                    presence: runtime.compactPresence,
-                    completionCelebration: runtime.completionCelebration,
-                    neckWidth: neckWidth,
-                    hasHardwareNotch: hasHardwareNotch,
-                    onExpand: {
-                        runtime.showDashboard()
-                    }
-                )
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                switch runtime.surface {
+                case .compact:
+                    CompactStatusView(
+                        store: runtime.store,
+                        presence: runtime.compactPresence,
+                        completionCelebration: runtime.completionCelebration,
+                        neckWidth: neckWidth,
+                        hasHardwareNotch: hasHardwareNotch,
+                        onExpand: {
+                            runtime.showDashboard()
+                        }
+                    )
 
-            case .dashboard:
-                DashboardView(
-                    store: runtime.store,
-                    neckWidth: neckWidth,
-                    hasHardwareNotch: hasHardwareNotch,
-                    onPreferredBodyHeight: { height in
-                        runtime.updateExpandedBodyHeight(
-                            height,
-                            for: .dashboard
-                        )
-                    },
-                    onCollapse: {
-                        runtime.showCompact()
-                    },
-                    onOpenSettings: {
-                        runtime.showSettings()
-                    }
-                )
+                case .dashboard:
+                    DashboardView(
+                        store: runtime.store,
+                        neckWidth: neckWidth,
+                        hasHardwareNotch: hasHardwareNotch,
+                        onPreferredBodyHeight: { height in
+                            runtime.updateExpandedBodyHeight(
+                                height,
+                                for: .dashboard
+                            )
+                        },
+                        onCollapse: {
+                            runtime.showCompact()
+                        },
+                        onOpenSettings: {
+                            runtime.showSettings()
+                        }
+                    )
 
-            case .settings:
-                SettingsView(
-                    store: runtime.store,
-                    neckWidth: neckWidth,
-                    hasHardwareNotch: hasHardwareNotch,
-                    notificationPermissionDenied: runtime.notificationPermissionDenied,
-                    onNotificationsChange: { enabled in
-                        runtime.setNotificationsEnabled(enabled)
-                    },
-                    onPreviewCompletion: {
-                        runtime.previewCompletionFeedback()
-                    },
-                    onPreferredBodyHeight: { height in
-                        runtime.updateExpandedBodyHeight(
-                            height,
-                            for: .settings
-                        )
-                    },
-                    onDismiss: {
-                        runtime.dismissSettings()
-                    }
-                )
+                case .settings:
+                    SettingsView(
+                        store: runtime.store,
+                        neckWidth: neckWidth,
+                        hasHardwareNotch: hasHardwareNotch,
+                        notificationPermissionDenied: runtime.notificationPermissionDenied,
+                        onNotificationsChange: { enabled in
+                            runtime.setNotificationsEnabled(enabled)
+                        },
+                        onPreviewCompletion: {
+                            runtime.previewCompletionFeedback()
+                        },
+                        onPreferredBodyHeight: { height in
+                            runtime.updateExpandedBodyHeight(
+                                height,
+                                for: .settings
+                            )
+                        },
+                        onDismiss: {
+                            runtime.dismissSettings()
+                        }
+                    )
+                }
             }
+            .frame(
+                width: geometry.size.width,
+                height: geometry.size.height,
+                alignment: .top
+            )
         }
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: .infinity,
-            alignment: .top
-        )
         .preferredColorScheme(.dark)
     }
 }

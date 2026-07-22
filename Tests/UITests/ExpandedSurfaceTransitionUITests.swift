@@ -68,6 +68,15 @@ final class ExpandedSurfaceTransitionUITests: XCTestCase {
             "The Settings content is not attached to an app window."
         )
 
+        let settingsTitle = app.staticTexts["Settings"]
+        let topContentInset = settingsTitle.frame.minY - panel.frame.minY
+        XCTAssertLessThanOrEqual(
+            topContentInset,
+            48,
+            "Settings starts \(topContentInset) points below panel top; "
+                + "panel=\(panel.frame), title=\(settingsTitle.frame)."
+        )
+
         for element in expectedContent {
             XCTAssertTrue(
                 panel.frame.contains(element.frame),
