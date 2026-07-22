@@ -33,10 +33,10 @@ struct SettingsView: View {
         self.onDismiss = onDismiss
     }
 
-    // Settings is a stable utility surface rather than an animated dashboard.
-    // A zero-height flare keeps its body flush with the notch seam so the
-    // larger panel does not read as a detached floating card.
-    private let flareHeight: CGFloat = 0
+    // Keep the same visible neck-to-body bridge as the dashboard. A zero-height
+    // flare switches NotchDropShape to a conventional rectangle and visually
+    // detaches this body window from the separate hardware-neck window.
+    private let flareHeight: CGFloat = 18
     private let minimumBodyHeight: CGFloat = 460
 
     private var displayedHealth: CodexSourceHealth {
