@@ -1,0 +1,40 @@
+{
+  "name": "remotion-celebrations",
+  "version": "1.0.0",
+  "description": "Frame-driven completion motion studies for Codex Notch",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yazmorukyaz/codex-notch.git",
+    "directory": "remotion-celebrations"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@remotion/cli": "4.0.496",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.496"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "4.0.496",
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "eslint": "9.19.0",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "render:quiet": "remotion render CompletionQuiet out/completion-quiet.mp4 --codec=h264 --crf=18 --muted",
+    "render:spark": "remotion render CompletionSpark out/completion-spark.mp4 --codec=h264 --crf=18 --muted",
+    "render:confetti": "remotion render CompletionConfetti out/completion-confetti.mp4 --codec=h264 --crf=18 --muted",
+    "render:screen-confetti": "remotion render CompletionScreenConfetti out/completion-screen-confetti.mp4 --codec=h264 --crf=18 --muted",
+    "render:all-done": "remotion render CompletionAllDone out/completion-all-done.mp4 --codec=h264 --crf=18 --muted",
+    "upgrade": "remotion upgrade",
+    "lint": "eslint src && tsc"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}

@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# Xcode / SwiftPM
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+*.xccheckout
+*.xcscmblueprint
+*.xcresult
+.build/
+.swiftpm/
+
+# Node / Remotion
+node_modules/
+dist/
+out/
+
+# Local configuration and logs
+.env
+.env.*
+!.env.example
+*.log
+
+# Recoverable metadata from the motion lab's former standalone repository
+**/.git-nested-backup/

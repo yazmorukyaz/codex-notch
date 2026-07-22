@@ -1,0 +1,5 @@
+{"method":"initialize","id":1,"params":{"clientInfo":{"name":"codex-notch-probe","title":"Codex Notch Probe","version":"0.1.0"},"capabilities":{"experimentalApi":true,"requestAttestation":false}}}
+{"method":"initialized"}
+{"method":"thread/list","id":2,"params":{"limit":10,"archived":false,"useStateDbOnly":true,"sortKey":"updated_at","sortDirection":"desc"}}
+{"method":"thread/loaded/list","id":3,"params":{}}
+{"method":"account/rateLimits/read","id":4,"params":{}}
