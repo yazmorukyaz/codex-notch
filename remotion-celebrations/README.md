@@ -41,4 +41,4 @@ npm run render:all-done
 ```
 
 Generated media is written to `out/` and intentionally ignored. Curated static
-previews used by the main repository live under `docs/assets/`.
+and animated previews used by the main repository live under `docs/assets/`.

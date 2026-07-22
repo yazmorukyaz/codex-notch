@@ -411,18 +411,15 @@ const Celebration: React.FC<CelebrationProps> = ({
 
 const ScreenCompletionConfetti: React.FC = () => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
+  const { fps } = useVideoConfig();
   const elapsed = frame / fps;
   const badgeOpacity =
     interpolate(elapsed, [0.04, 0.2], [0, 1], clamp) *
     interpolate(elapsed, [1.72, 2.22], [1, 0], clamp);
-  const badgeEntry = spring({
-    fps,
-    frame: Math.max(0, frame - 2),
-    config: {damping: 17, mass: 0.7, stiffness: 190},
-    durationInFrames: 24,
-  });
-  const badgeScale = interpolate(badgeEntry, [0, 1], [0.92, 1]);
+  const badgeEntry = interpolate(elapsed, [0.04, 0.38], [0, 1], clamp);
+  const badgeProgress =
+    1 - Math.pow(2, -9 * badgeEntry) * Math.cos(badgeEntry * Math.PI * 4.5);
+  const badgeScale = 0.92 + 0.08 * badgeProgress;
   const flashOpacity =
     0.055 *
     interpolate(elapsed, [0, 0.06], [0, 1], clamp) *
@@ -449,6 +446,97 @@ const ScreenCompletionConfetti: React.FC = () => {
           top: 0,
         }}
       />
+      {[
+        "rgba(255,95,87,0.75)",
+        "rgba(255,189,46,0.75)",
+        "rgba(40,201,64,0.75)",
+      ].map((color, index) => (
+        <div
+          key={color}
+          style={{
+            backgroundColor: color,
+            borderRadius: "50%",
+            height: 10,
+            left: 18 + index * 18,
+            position: "absolute",
+            top: 16,
+            width: 10,
+          }}
+        />
+      ))}
+      <div
+        style={{
+          backgroundColor: "rgba(255,255,255,0.08)",
+          borderRadius: 5,
+          height: 18,
+          left: "50%",
+          position: "absolute",
+          top: 12,
+          transform: "translateX(-50%)",
+          width: 320,
+        }}
+      />
+      <div
+        style={{
+          backgroundColor: "rgba(0,0,0,0.18)",
+          bottom: 0,
+          left: 0,
+          position: "absolute",
+          top: 42,
+          width: 220,
+        }}
+      >
+        {Array.from({ length: 8 }, (_, index) => (
+          <div
+            key={index}
+            style={{
+              backgroundColor:
+                index === 2
+                  ? "rgba(255,255,255,0.18)"
+                  : "rgba(255,255,255,0.08)",
+              borderRadius: 4,
+              height: 11,
+              left: 24,
+              position: "absolute",
+              top: 24 + index * 28,
+              width: index === 2 ? 154 : 126,
+            }}
+          />
+        ))}
+      </div>
+      <div
+        style={{
+          backgroundColor: "rgba(255,255,255,0.14)",
+          borderRadius: 8,
+          height: 24,
+          left: 262,
+          position: "absolute",
+          top: 84,
+          width: 420,
+        }}
+      />
+      <div
+        style={{
+          backgroundColor: "rgba(255,255,255,0.07)",
+          borderRadius: 6,
+          height: 13,
+          left: 262,
+          position: "absolute",
+          right: 42,
+          top: 126,
+        }}
+      />
+      <div
+        style={{
+          backgroundColor: "rgba(255,255,255,0.07)",
+          borderRadius: 6,
+          height: 13,
+          left: 262,
+          position: "absolute",
+          top: 157,
+          width: 680,
+        }}
+      />
       <div
         style={{
           backgroundColor: "#000",
@@ -461,13 +549,12 @@ const ScreenCompletionConfetti: React.FC = () => {
         }}
       />
       <AbsoluteFill
-        style={{backgroundColor: `rgba(79, 199, 125, ${flashOpacity})`}}
+        style={{ backgroundColor: `rgba(79, 199, 125, ${flashOpacity})` }}
       />
 
       {screenConfettiPieces.map((piece, index) => {
         const time = Math.max(0, elapsed - piece.delay);
-        const xVelocity =
-          piece.fan * SCREEN_WIDTH * piece.horizontalVelocity;
+        const xVelocity = piece.fan * SCREEN_WIDTH * piece.horizontalVelocity;
         const horizontalTravel =
           (xVelocity * (1 - Math.exp(-piece.drag * time))) / piece.drag;
         const wobble =
@@ -475,8 +562,7 @@ const ScreenCompletionConfetti: React.FC = () => {
         const x = SCREEN_WIDTH / 2 + horizontalTravel + wobble;
         const verticalVelocity = SCREEN_HEIGHT * piece.verticalVelocity;
         const gravity = SCREEN_HEIGHT * piece.gravity;
-        const y =
-          28 + verticalVelocity * time + 0.5 * gravity * time * time;
+        const y = 28 + verticalVelocity * time + 0.5 * gravity * time * time;
         const opacity =
           interpolate(time, [0, 0.05], [0, 1], clamp) *
           interpolate(time, [1.4, 2.16], [1, 0], clamp);
@@ -486,7 +572,8 @@ const ScreenCompletionConfetti: React.FC = () => {
           <div
             key={index}
             style={{
-              backgroundColor: screenPalette[piece.colorIndex],
+              backgroundColor:
+                screenPalette[piece.colorIndex % screenPalette.length],
               borderRadius: 1.5,
               height: piece.height,
               left: 0,
@@ -519,7 +606,7 @@ const ScreenCompletionConfetti: React.FC = () => {
           boxShadow: "0 12px 28px rgba(0,0,0,0.36)",
           display: "flex",
           gap: 13,
-          height: 66,
+          height: 82,
           left: "50%",
           opacity: badgeOpacity,
           padding: "0 18px",
@@ -542,10 +629,42 @@ const ScreenCompletionConfetti: React.FC = () => {
             width: 38,
           }}
         >
-          ✓
+          <svg aria-hidden="true" height="20" viewBox="0 0 20 20" width="20">
+            <path
+              d="M3.8 10.4 8 14.5 16.2 5.7"
+              fill="none"
+              stroke="rgba(0,0,0,0.88)"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.8"
+            />
+          </svg>
         </div>
-        <div style={{display: "flex", flexDirection: "column", gap: 2}}>
-          <span style={{fontSize: 18, fontWeight: 650}}>Task finished</span>
+        <div
+          style={{
+            alignItems: "flex-start",
+            display: "flex",
+            flexDirection: "column",
+            fontFamily:
+              "ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif",
+            gap: 2,
+            width: 270,
+          }}
+        >
+          <span style={{ fontSize: 18, fontWeight: 650 }}>Task finished</span>
+          <span
+            style={{
+              color: "#8ce6ab",
+              fontSize: 13,
+              fontWeight: 650,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              width: "100%",
+            }}
+          >
+            Codex Notch
+          </span>
           <span
             style={{
               color: "rgba(255,255,255,0.62)",
@@ -571,7 +690,7 @@ export const CelebrationCompositions: React.FC = () => {
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
-        defaultProps={{durationInFrames: 72, variant: "quiet"}}
+        defaultProps={{ durationInFrames: 72, variant: "quiet" }}
       />
       <Composition
         id="CompletionSpark"
@@ -580,7 +699,7 @@ export const CelebrationCompositions: React.FC = () => {
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
-        defaultProps={{durationInFrames: 108, variant: "spark"}}
+        defaultProps={{ durationInFrames: 108, variant: "spark" }}
       />
       <Composition
         id="CompletionConfetti"
@@ -589,7 +708,7 @@ export const CelebrationCompositions: React.FC = () => {
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
-        defaultProps={{durationInFrames: 108, variant: "confetti"}}
+        defaultProps={{ durationInFrames: 108, variant: "confetti" }}
       />
       <Composition
         id="CompletionAllDone"
@@ -598,7 +717,7 @@ export const CelebrationCompositions: React.FC = () => {
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
-        defaultProps={{durationInFrames: 96, variant: "allDone"}}
+        defaultProps={{ durationInFrames: 96, variant: "allDone" }}
       />
       <Composition
         id="CompletionScreenConfetti"

@@ -12,6 +12,30 @@ away at the notch.
   <img alt="Status: experimental" src="https://img.shields.io/badge/status-experimental-F4B942">
 </p>
 
+Codex Notch is a native SwiftUI and AppKit menu-bar app. It turns the MacBook
+camera area into a quiet status surface for people running Codex across several
+projects at once—without starting another Codex runtime or touching Codex state.
+
+## Preview
+
+### Resting notch
+
+The compact surface stays tucked around the camera and only shows what needs
+your attention.
+
+<p align="center">
+  <img
+    alt="Codex Notch compact state showing one task that needs attention"
+    src="codex-notch-true-compact-board.png"
+    width="600"
+  >
+</p>
+
+### Open dashboard
+
+Expand it to see active tasks, child-agent counts, recent completions, and the
+latest locally observed usage windows across projects.
+
 <p align="center">
   <img
     alt="Codex Notch expanded dashboard showing demo task and usage data"
@@ -20,9 +44,20 @@ away at the notch.
   >
 </p>
 
-Codex Notch is a native SwiftUI and AppKit menu-bar app. It turns the MacBook
-camera area into a quiet status surface for people running Codex across several
-projects at once—without starting another Codex runtime or touching Codex state.
+### Completion animation
+
+When a task finishes, a brief screen-wide celebration names the project while
+the rest of your work keeps running.
+
+<p align="center">
+  <img
+    alt="Animated screen-wide Codex Notch completion celebration naming the finished project"
+    src="docs/assets/completion-animation.gif"
+    width="820"
+  >
+  <br>
+  <sub>All previews use deterministic demo data.</sub>
+</p>
 
 ## Highlights
 
@@ -35,26 +70,10 @@ projects at once—without starting another Codex runtime or touching Codex stat
 - Opens the exact task in Codex through `codex://threads/<thread-id>`.
 - Celebrates genuine completions with a click-through, Reduce Motion-aware
   screen animation that names the finished project.
-- Supports Privacy Mode, Quiet Mode, opt-in notifications, and menu-bar access
-  when no hardware notch is available.
+- Supports Privacy Mode, Quiet Mode, opt-in notifications, always-available
+  menu-bar controls, and a top-center fallback on displays without a notch.
 - Makes no network requests and never writes to Codex's database or rollout
   files.
-
-<p align="center">
-  <img
-    alt="Codex Notch compact state showing one task that needs attention"
-    src="codex-notch-true-compact-board.png"
-    width="600"
-  >
-</p>
-
-<p align="center">
-  <img
-    alt="Screen-wide Codex Notch completion celebration naming the finished project"
-    src="docs/assets/completion-project.png"
-    width="820"
-  >
-</p>
 
 ## How it works
 
@@ -150,8 +169,8 @@ small and the data contract is documented.
   schemas. A Codex update may require parser changes.
 - The view is intentionally bounded to 12 primary tasks and up to 24 child
   agents per task; it is not an account-history browser.
-- Status reflects local evidence. A missing or truncated lifecycle is shown as
-  unverified instead of being guessed.
+- Status reflects local evidence. When lifecycle evidence cannot be verified,
+  the app shows Unverified or Stale instead of guessing.
 - It supervises tasks but does not control them, answer approval requests, or
   replace the Codex Desktop interface.
 
