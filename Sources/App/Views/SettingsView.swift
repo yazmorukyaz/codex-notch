@@ -211,13 +211,14 @@ struct SettingsView: View {
                     title: "Completion effect",
                     systemImage: "sparkles"
                 ) {
-                    Picker("Completion effect", selection: $store.completionEffect) {
-                        Text("Full screen").tag(CompletionEffect.fullScreen)
-                        Text("Notch").tag(CompletionEffect.notchOnly)
-                        Text("Off").tag(CompletionEffect.off)
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
+                    DarkSegmentedPicker(
+                        selection: $store.completionEffect,
+                        options: [
+                            DarkSegment(value: .fullScreen, title: "Full screen"),
+                            DarkSegment(value: .notchOnly, title: "Notch"),
+                            DarkSegment(value: .off, title: "Off"),
+                        ]
+                    )
                 }
 
                 settingsDivider
@@ -226,16 +227,14 @@ struct SettingsView: View {
                     title: "While Codex is active",
                     systemImage: "macwindow.on.rectangle"
                 ) {
-                    Picker(
-                        "While Codex is active",
-                        selection: $store.codexActiveCompletionBehavior
-                    ) {
-                        Text("Keep").tag(CodexActiveCompletionBehavior.keepSelectedEffect)
-                        Text("Notch").tag(CodexActiveCompletionBehavior.notchOnly)
-                        Text("Hide").tag(CodexActiveCompletionBehavior.hide)
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
+                    DarkSegmentedPicker(
+                        selection: $store.codexActiveCompletionBehavior,
+                        options: [
+                            DarkSegment(value: .keepSelectedEffect, title: "Keep"),
+                            DarkSegment(value: .notchOnly, title: "Notch"),
+                            DarkSegment(value: .hide, title: "Hide"),
+                        ]
+                    )
                     .disabled(store.completionEffect == .off)
                 }
 
@@ -253,8 +252,7 @@ struct SettingsView: View {
                     Spacer()
 
                     Button("Preview", action: onPreviewCompletion)
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+                        .buttonStyle(SettingsPreviewButtonStyle())
                         .disabled(store.completionEffect == .off)
                         .accessibilityIdentifier("settings.previewAnimation")
                 }
@@ -359,6 +357,94 @@ private struct CompactPickerRow<Control: View>: View {
         }
         .padding(.horizontal, 11)
         .padding(.vertical, 10)
+    }
+}
+
+private struct DarkSegment<Option: Hashable> {
+    let value: Option
+    let title: String
+}
+
+private struct DarkSegmentedPicker<Option: Hashable>: View {
+    @Binding var selection: Option
+    let options: [DarkSegment<Option>]
+
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        HStack(spacing: 3) {
+            ForEach(Array(options.enumerated()), id: \.offset) { _, option in
+                let isSelected = selection == option.value
+
+                Button {
+                    selection = option.value
+                } label: {
+                    Text(option.title)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(
+                            isSelected
+                                ? Color.black.opacity(0.88)
+                                : Color.white.opacity(isEnabled ? 0.82 : 0.45)
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .background {
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(
+                            isSelected
+                                ? StatusBadgeKind.working.tint
+                                : Color.white.opacity(0.055)
+                        )
+                }
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
+        .padding(3)
+        .background(Color.black.opacity(0.28))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.white.opacity(0.10), lineWidth: 0.75)
+        }
+        .opacity(isEnabled ? 1 : 0.72)
+    }
+}
+
+private struct SettingsPreviewButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(
+                isEnabled
+                    ? Color.black.opacity(0.88)
+                    : Color.white.opacity(0.45)
+            )
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(
+                        isEnabled
+                            ? StatusBadgeKind.working.tint.opacity(
+                                configuration.isPressed ? 0.72 : 1
+                            )
+                            : Color.white.opacity(0.07)
+                    )
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(
+                        isEnabled
+                            ? Color.white.opacity(0.16)
+                            : Color.white.opacity(0.08),
+                        lineWidth: 0.75
+                    )
+            }
     }
 }
 
