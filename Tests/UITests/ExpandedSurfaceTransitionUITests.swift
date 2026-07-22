@@ -31,10 +31,16 @@ final class ExpandedSurfaceTransitionUITests: XCTestCase {
             app.staticTexts["Source"],
         ]
 
+        let expectedButtons = [
+            app.buttons["Close settings"],
+            app.buttons["settings.previewAnimation"],
+            app.buttons["Refresh"],
+        ]
+
         for element in expectedContent {
             XCTAssertTrue(
                 element.waitForExistence(timeout: 2),
-                "The Settings body is missing expected content."
+                "The Settings body is missing '\(element.label)'."
             )
             XCTAssertFalse(
                 element.frame.isEmpty,
@@ -42,7 +48,18 @@ final class ExpandedSurfaceTransitionUITests: XCTestCase {
             )
         }
 
-        let panel = app.windows
+        for button in expectedButtons {
+            XCTAssertTrue(
+                button.waitForExistence(timeout: 2),
+                "A Settings action is missing or inaccessible."
+            )
+            XCTAssertFalse(
+                button.frame.isEmpty,
+                "A Settings action has an empty accessibility frame."
+            )
+        }
+
+        let panel = app.dialogs
             .containing(.staticText, identifier: "Settings")
             .firstMatch
 
@@ -54,7 +71,16 @@ final class ExpandedSurfaceTransitionUITests: XCTestCase {
         for element in expectedContent {
             XCTAssertTrue(
                 panel.frame.contains(element.frame),
-                "Settings content is detached from or clipped outside its panel."
+                "Settings content '\(element.label)' at \(element.frame) is "
+                    + "outside panel \(panel.frame)."
+            )
+        }
+
+        for button in expectedButtons {
+            XCTAssertTrue(
+                panel.frame.contains(button.frame),
+                "Settings action '\(button.label)' at \(button.frame) is "
+                    + "outside panel \(panel.frame)."
             )
         }
     }

@@ -34,6 +34,7 @@ struct SettingsView: View {
     }
 
     private let flareHeight: CGFloat = 18
+    private let minimumBodyHeight: CGFloat = 460
 
     private var displayedHealth: CodexSourceHealth {
         if store.lastRefreshFailedAt != nil {
@@ -79,208 +80,20 @@ struct SettingsView: View {
                         )
                     )
 
-                ScrollView(.vertical) {
-                    VStack(alignment: .leading, spacing: 15) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Settings")
-                                .font(.system(size: 16, weight: .semibold))
+                VStack(alignment: .leading, spacing: 14) {
+                    settingsHeader
 
-                            Text("Choose what the notch can reveal and interrupt you for.")
-                                .font(.system(size: 11))
-                                .foregroundStyle(Color.white.opacity(0.58))
-                        }
-
-                        Spacer()
-
-                        Button(action: onDismiss) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Color.white.opacity(0.72))
-                                .frame(width: 28, height: 28)
-                                .background(Color.white.opacity(0.055), in: Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .help("Close settings")
-                        .accessibilityLabel("Close settings")
+                    HStack(alignment: .top, spacing: 12) {
+                        alertsAndPrivacySection
+                        completionFeedbackSection
                     }
 
-                    VStack(spacing: 0) {
-                        SettingToggleRow(
-                            title: "Notifications",
-                            detail: "Alert only when a task finishes or needs you.",
-                            systemImage: "bell.fill",
-                            isOn: notificationsBinding
-                        )
-
-                        if notificationPermissionDenied {
-                            HStack(spacing: 7) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                Text("Notifications are blocked in System Settings.")
-                            }
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(StatusBadgeKind.needsAttention.tint)
-                            .padding(.horizontal, 13)
-                            .padding(.bottom, 10)
-                        }
-
-                        Divider()
-                            .overlay(Color.white.opacity(0.08))
-
-                        SettingToggleRow(
-                            title: "Quiet mode",
-                            detail: "Keep monitoring, but suppress enabled notifications.",
-                            systemImage: "moon.fill",
-                            isOn: $store.quietMode
-                        )
-
-                        Divider()
-                            .overlay(Color.white.opacity(0.08))
-
-                        SettingToggleRow(
-                            title: "Urgent alerts in Quiet Mode",
-                            detail: "Still notify when a task needs approval or an answer.",
-                            systemImage: "exclamationmark.bubble.fill",
-                            isOn: $store.urgentAlertsInQuietMode
-                        )
-
-                        Divider()
-                            .overlay(Color.white.opacity(0.08))
-
-                        SettingToggleRow(
-                            title: "Privacy mode",
-                            detail: "Hide task, project, and activity details in the panel.",
-                            systemImage: "eye.slash.fill",
-                            isOn: $store.privacyMode
-                        )
-                    }
-                    .background(Color.white.opacity(0.035))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.white.opacity(0.075), lineWidth: 0.75)
-                            .allowsHitTesting(false)
-                    }
-
-                    Text("Completion feedback")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.60))
-
-                    VStack(spacing: 0) {
-                        SettingControlRow(
-                            title: "Completion effect",
-                            detail: "Choose how completed tasks celebrate.",
-                            systemImage: "sparkles"
-                        ) {
-                            Picker("Completion effect", selection: $store.completionEffect) {
-                                Text("Full screen").tag(CompletionEffect.fullScreen)
-                                Text("Notch only").tag(CompletionEffect.notchOnly)
-                                Text("Off").tag(CompletionEffect.off)
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.segmented)
-                            .frame(width: 250)
-                        }
-
-                        Divider()
-                            .overlay(Color.white.opacity(0.08))
-
-                        SettingControlRow(
-                            title: "While Codex is active",
-                            detail: "Keep it visible without covering Codex.",
-                            systemImage: "macwindow.on.rectangle"
-                        ) {
-                            Picker(
-                                "While Codex is active",
-                                selection: $store.codexActiveCompletionBehavior
-                            ) {
-                                Text("Keep effect").tag(
-                                    CodexActiveCompletionBehavior.keepSelectedEffect
-                                )
-                                Text("Notch only").tag(
-                                    CodexActiveCompletionBehavior.notchOnly
-                                )
-                                Text("Hide").tag(CodexActiveCompletionBehavior.hide)
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.segmented)
-                            .frame(width: 250)
-                            .disabled(store.completionEffect == .off)
-                        }
-
-                        Divider()
-                            .overlay(Color.white.opacity(0.08))
-
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Preview animation")
-                                    .font(.system(size: 12, weight: .medium))
-                                Text("Play the selected base completion effect.")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Color.white.opacity(0.55))
-                            }
-
-                            Spacer()
-
-                            Button("Preview", action: onPreviewCompletion)
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                                .disabled(store.completionEffect == .off)
-                        }
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 11)
-                    }
-                    .background(Color.white.opacity(0.035))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.white.opacity(0.075), lineWidth: 0.75)
-                            .allowsHitTesting(false)
-                    }
-
-                    HStack(spacing: 10) {
-                        Text("Source")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Color.white.opacity(0.60))
-
-                        StatusBadge(StatusBadgeKind(sourceHealth: displayedHealth))
-
-                        HStack(spacing: 3) {
-                            Text("Updated")
-                            Text(store.snapshot.generatedAt, style: .relative)
-                        }
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.50))
-
-                        Spacer()
-
-                        Button {
-                            Task {
-                                await store.refresh()
-                            }
-                        } label: {
-                            HStack(spacing: 6) {
-                                if store.isRefreshing {
-                                    ProgressView()
-                                        .controlSize(.mini)
-                                } else {
-                                    Image(systemName: "arrow.clockwise")
-                                }
-
-                                Text("Refresh")
-                            }
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(StatusBadgeKind.working.tint)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(store.isRefreshing)
-                    }
-                    }
+                    sourceFooter
+                }
                     .padding(.horizontal, 18)
                     .padding(.bottom, 18)
                     .padding(.top, contentTop + (hasHardwareNotch ? 9 : 14))
-                    .frame(maxWidth: 600)
+                    .frame(maxWidth: 684)
                     .frame(maxWidth: .infinity)
                     .background {
                         GeometryReader { contentGeometry in
@@ -290,9 +103,6 @@ struct SettingsView: View {
                             )
                         }
                     }
-                }
-                .scrollIndicators(.visible)
-
             }
             .frame(
                 width: geometry.size.width,
@@ -300,7 +110,7 @@ struct SettingsView: View {
                 alignment: .top
             )
             .onPreferenceChange(SettingsContentHeightPreferenceKey.self) { height in
-                let preferredHeight = ceil(height)
+                let preferredHeight = max(minimumBodyHeight, ceil(height))
                 guard preferredHeight > 0,
                       abs(preferredHeight - lastReportedBodyHeight) >= 1 else {
                     return
@@ -317,48 +127,238 @@ struct SettingsView: View {
             store.startPolling()
         }
     }
+
+    private var settingsHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Settings")
+                    .font(.system(size: 16, weight: .semibold))
+
+                Text("Choose what the notch can reveal and interrupt you for.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.58))
+            }
+
+            Spacer()
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color.white.opacity(0.72))
+                    .frame(width: 28, height: 28)
+                    .background(Color.white.opacity(0.055), in: Circle())
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("Close settings")
+            .accessibilityLabel("Close settings")
+        }
+    }
+
+    private var alertsAndPrivacySection: some View {
+        SettingsSection(title: "Alerts & privacy") {
+            VStack(spacing: 0) {
+                SettingToggleRow(
+                    title: "Notifications",
+                    detail: "Task finishes or needs you.",
+                    systemImage: "bell.fill",
+                    isOn: notificationsBinding
+                )
+
+                if notificationPermissionDenied {
+                    Text("Notifications are blocked in System Settings.")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(StatusBadgeKind.needsAttention.tint)
+                        .padding(.horizontal, 11)
+                        .padding(.bottom, 8)
+                }
+
+                settingsDivider
+
+                SettingToggleRow(
+                    title: "Quiet mode",
+                    detail: "Suppress standard notifications.",
+                    systemImage: "moon.fill",
+                    isOn: $store.quietMode
+                )
+
+                settingsDivider
+
+                SettingToggleRow(
+                    title: "Urgent alerts in Quiet Mode",
+                    detail: "Allow approval and answer alerts.",
+                    systemImage: "exclamationmark.bubble.fill",
+                    isOn: $store.urgentAlertsInQuietMode
+                )
+
+                settingsDivider
+
+                SettingToggleRow(
+                    title: "Privacy mode",
+                    detail: "Hide task and project details.",
+                    systemImage: "eye.slash.fill",
+                    isOn: $store.privacyMode
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
+    }
+
+    private var completionFeedbackSection: some View {
+        SettingsSection(title: "Completion feedback") {
+            VStack(spacing: 0) {
+                CompactPickerRow(
+                    title: "Completion effect",
+                    systemImage: "sparkles"
+                ) {
+                    Picker("Completion effect", selection: $store.completionEffect) {
+                        Text("Full screen").tag(CompletionEffect.fullScreen)
+                        Text("Notch").tag(CompletionEffect.notchOnly)
+                        Text("Off").tag(CompletionEffect.off)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                }
+
+                settingsDivider
+
+                CompactPickerRow(
+                    title: "While Codex is active",
+                    systemImage: "macwindow.on.rectangle"
+                ) {
+                    Picker(
+                        "While Codex is active",
+                        selection: $store.codexActiveCompletionBehavior
+                    ) {
+                        Text("Keep").tag(CodexActiveCompletionBehavior.keepSelectedEffect)
+                        Text("Notch").tag(CodexActiveCompletionBehavior.notchOnly)
+                        Text("Hide").tag(CodexActiveCompletionBehavior.hide)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .disabled(store.completionEffect == .off)
+                }
+
+                settingsDivider
+
+                HStack(spacing: 10) {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(StatusBadgeKind.working.tint)
+                        .frame(width: 18)
+
+                    Text("Preview animation")
+                        .font(.system(size: 11, weight: .medium))
+
+                    Spacer()
+
+                    Button("Preview", action: onPreviewCompletion)
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .disabled(store.completionEffect == .off)
+                        .accessibilityIdentifier("settings.previewAnimation")
+                }
+                .padding(.horizontal, 11)
+                .padding(.vertical, 10)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
+    }
+
+    private var sourceFooter: some View {
+        HStack(spacing: 10) {
+            Text("Source")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.60))
+
+            StatusBadge(StatusBadgeKind(sourceHealth: displayedHealth))
+
+            HStack(spacing: 3) {
+                Text("Updated")
+                Text(store.snapshot.generatedAt, style: .relative)
+            }
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(Color.white.opacity(0.50))
+
+            Spacer()
+
+            Button {
+                Task { await store.refresh() }
+            } label: {
+                HStack(spacing: 6) {
+                    if store.isRefreshing {
+                        ProgressView().controlSize(.mini)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    Text("Refresh")
+                }
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(StatusBadgeKind.working.tint)
+            }
+            .buttonStyle(.plain)
+            .disabled(store.isRefreshing)
+        }
+    }
+
+    private var settingsDivider: some View {
+        Divider().overlay(Color.white.opacity(0.08))
+    }
 }
 
-private struct SettingControlRow<Control: View>: View {
+private struct SettingsSection<Content: View>: View {
     let title: String
-    let detail: String
+    let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.60))
+
+            content
+                .background(Color.white.opacity(0.035))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.white.opacity(0.075), lineWidth: 0.75)
+                        .allowsHitTesting(false)
+                }
+        }
+    }
+}
+
+private struct CompactPickerRow<Control: View>: View {
+    let title: String
     let systemImage: String
     let control: Control
 
     init(
         title: String,
-        detail: String,
         systemImage: String,
         @ViewBuilder control: () -> Control
     ) {
         self.title = title
-        self.detail = detail
         self.systemImage = systemImage
         self.control = control()
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(StatusBadgeKind.working.tint)
-                .frame(width: 20)
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: systemImage)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.white.opacity(0.90))
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 12, weight: .medium))
-
-                Text(detail)
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.55))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 16)
             control
+                .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, 13)
-        .padding(.vertical, 11)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 10)
     }
 }
 
