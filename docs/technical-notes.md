@@ -26,6 +26,10 @@ Each catalog row points to an append-only rollout JSONL file. The parser reads a
 - `event_msg.payload.type == token_count`
 - selected event types mapped to fixed, non-sensitive activity labels
 
+Persisted approval requests are labeled **Needs approval**. Persisted user-input
+or elicitation requests are labeled **Needs answer**. Both remain attention
+states until later rollout evidence changes the task lifecycle.
+
 The latest `token_count.payload.rate_limits` value supplies the real usage windows. The UI labels these values as “used,” displays their reset time, and includes snapshot freshness.
 
 Rollouts may contain user prompts, tool arguments, command output, hidden reasoning metadata, and other sensitive content. Codex Notch never presents those raw values. Unknown fields and event types are ignored.
@@ -35,7 +39,8 @@ Rollouts may contain user prompts, tool arguments, command output, hidden reason
 - **Working:** the newest known turn has `task_started` and no later matching `task_complete` or `turn_aborted`.
 - **Completed:** the latest explicit terminal event is `task_complete`.
 - **Interrupted:** the latest explicit terminal event is `turn_aborted`.
-- **Needs You:** reserved for explicit persisted evidence. The MVP does not infer it from inactivity.
+- **Needs approval / Needs answer:** explicit persisted request evidence. The
+  app does not infer attention from inactivity.
 - **Stale:** a turn still appears open but no new rollout evidence has arrived within the configured threshold. The label says “No recent activity,” not “stuck.”
 - **Idle:** there is no current open turn and no terminal state suitable for the recent-finished window.
 

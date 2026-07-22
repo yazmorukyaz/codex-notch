@@ -65,6 +65,9 @@ struct NotchRootView: View {
                     onNotificationsChange: { enabled in
                         runtime.setNotificationsEnabled(enabled)
                     },
+                    onPreviewCompletion: {
+                        runtime.previewCompletionFeedback()
+                    },
                     onPreferredBodyHeight: { height in
                         runtime.updateExpandedBodyHeight(
                             height,

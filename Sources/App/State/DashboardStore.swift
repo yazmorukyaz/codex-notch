@@ -48,6 +48,36 @@ final class DashboardStore {
         }
     }
 
+    var completionEffect: CompletionEffect {
+        didSet {
+            guard completionEffect != oldValue else { return }
+            userDefaults.set(
+                completionEffect.rawValue,
+                forKey: FeedbackPreferences.Key.completionEffect
+            )
+        }
+    }
+
+    var codexActiveCompletionBehavior: CodexActiveCompletionBehavior {
+        didSet {
+            guard codexActiveCompletionBehavior != oldValue else { return }
+            userDefaults.set(
+                codexActiveCompletionBehavior.rawValue,
+                forKey: FeedbackPreferences.Key.codexActiveBehavior
+            )
+        }
+    }
+
+    var urgentAlertsInQuietMode: Bool {
+        didSet {
+            guard urgentAlertsInQuietMode != oldValue else { return }
+            userDefaults.set(
+                urgentAlertsInQuietMode,
+                forKey: FeedbackPreferences.Key.urgentAlertsInQuietMode
+            )
+        }
+    }
+
     private(set) var notificationsEnabled: Bool {
         didSet {
             guard notificationsEnabled != oldValue else { return }
@@ -86,6 +116,9 @@ final class DashboardStore {
     private let completionCelebrationPolicy = CompletionCelebrationPolicy()
 
     @ObservationIgnored
+    private let transitionNotificationPolicy = TransitionNotificationPolicy()
+
+    @ObservationIgnored
     private var pollingTask: Task<Void, Never>?
 
     @ObservationIgnored
@@ -101,6 +134,7 @@ final class DashboardStore {
         onCompletion: CompletionHandler? = nil,
         onOpenTask: TaskOpenHandler? = nil
     ) {
+        let feedbackPreferences = FeedbackPreferences.load(from: userDefaults)
         self.snapshot = initialSnapshot
         self.userDefaults = userDefaults
         self.pollInterval = pollInterval
@@ -111,6 +145,9 @@ final class DashboardStore {
         self.onOpenTask = onOpenTask
         self.privacyMode = userDefaults.object(forKey: PreferenceKey.privacyMode) as? Bool ?? false
         self.quietMode = userDefaults.object(forKey: PreferenceKey.quietMode) as? Bool ?? false
+        self.completionEffect = feedbackPreferences.completionEffect
+        self.codexActiveCompletionBehavior = feedbackPreferences.codexActiveBehavior
+        self.urgentAlertsInQuietMode = feedbackPreferences.urgentAlertsInQuietMode
         self.notificationsEnabled = userDefaults.object(
             forKey: PreferenceKey.notificationsEnabled
         ) as? Bool ?? false
@@ -273,9 +310,7 @@ final class DashboardStore {
 
         notifyAboutCompletions(in: transitions, observedAt: updatedSnapshot.generatedAt)
 
-        if notificationsEnabled, !quietMode {
-            notifyAboutRecentTransitions(transitions)
-        }
+        notifyAboutRecentTransitions(transitions)
     }
 
     private func recentTransitions(
@@ -326,17 +361,13 @@ final class DashboardStore {
     ) {
         guard let onRecentTransition else { return }
 
-        for transition in transitions where isNotificationWorthy(transition.currentState) {
+        for transition in transitions where transitionNotificationPolicy.shouldDeliver(
+            state: transition.currentState,
+            notificationsEnabled: notificationsEnabled,
+            quietMode: quietMode,
+            urgentAlertsInQuietMode: urgentAlertsInQuietMode
+        ) {
             onRecentTransition(transition)
-        }
-    }
-
-    private func isNotificationWorthy(_ state: CodexTaskDisplayState) -> Bool {
-        switch state {
-        case .needsAttention, .completed, .interrupted:
-            return true
-        case .working, .idle, .stale, .unverified:
-            return false
         }
     }
 

@@ -7,6 +7,7 @@ struct SettingsView: View {
     let hasHardwareNotch: Bool
     let notificationPermissionDenied: Bool
     let onNotificationsChange: (Bool) -> Void
+    let onPreviewCompletion: () -> Void
     let onPreferredBodyHeight: (CGFloat) -> Void
     let onDismiss: () -> Void
 
@@ -18,6 +19,7 @@ struct SettingsView: View {
         hasHardwareNotch: Bool = true,
         notificationPermissionDenied: Bool = false,
         onNotificationsChange: @escaping (Bool) -> Void = { _ in },
+        onPreviewCompletion: @escaping () -> Void = {},
         onPreferredBodyHeight: @escaping (CGFloat) -> Void = { _ in },
         onDismiss: @escaping () -> Void = {}
     ) {
@@ -26,6 +28,7 @@ struct SettingsView: View {
         self.hasHardwareNotch = hasHardwareNotch
         self.notificationPermissionDenied = notificationPermissionDenied
         self.onNotificationsChange = onNotificationsChange
+        self.onPreviewCompletion = onPreviewCompletion
         self.onPreferredBodyHeight = onPreferredBodyHeight
         self.onDismiss = onDismiss
     }
@@ -76,7 +79,8 @@ struct SettingsView: View {
                         )
                     )
 
-                VStack(alignment: .leading, spacing: 15) {
+                ScrollView(.vertical) {
+                    VStack(alignment: .leading, spacing: 15) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Settings")
@@ -135,11 +139,97 @@ struct SettingsView: View {
                             .overlay(Color.white.opacity(0.08))
 
                         SettingToggleRow(
+                            title: "Urgent alerts in Quiet Mode",
+                            detail: "Still notify when a task needs approval or an answer.",
+                            systemImage: "exclamationmark.bubble.fill",
+                            isOn: $store.urgentAlertsInQuietMode
+                        )
+
+                        Divider()
+                            .overlay(Color.white.opacity(0.08))
+
+                        SettingToggleRow(
                             title: "Privacy mode",
                             detail: "Hide task, project, and activity details in the panel.",
                             systemImage: "eye.slash.fill",
                             isOn: $store.privacyMode
                         )
+                    }
+                    .background(Color.white.opacity(0.035))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.white.opacity(0.075), lineWidth: 0.75)
+                            .allowsHitTesting(false)
+                    }
+
+                    Text("Completion feedback")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.60))
+
+                    VStack(spacing: 0) {
+                        SettingControlRow(
+                            title: "Completion effect",
+                            detail: "Choose how completed tasks celebrate.",
+                            systemImage: "sparkles"
+                        ) {
+                            Picker("Completion effect", selection: $store.completionEffect) {
+                                Text("Full screen").tag(CompletionEffect.fullScreen)
+                                Text("Notch only").tag(CompletionEffect.notchOnly)
+                                Text("Off").tag(CompletionEffect.off)
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.segmented)
+                            .frame(width: 250)
+                        }
+
+                        Divider()
+                            .overlay(Color.white.opacity(0.08))
+
+                        SettingControlRow(
+                            title: "While Codex is active",
+                            detail: "Keep it visible without covering Codex.",
+                            systemImage: "macwindow.on.rectangle"
+                        ) {
+                            Picker(
+                                "While Codex is active",
+                                selection: $store.codexActiveCompletionBehavior
+                            ) {
+                                Text("Keep effect").tag(
+                                    CodexActiveCompletionBehavior.keepSelectedEffect
+                                )
+                                Text("Notch only").tag(
+                                    CodexActiveCompletionBehavior.notchOnly
+                                )
+                                Text("Hide").tag(CodexActiveCompletionBehavior.hide)
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.segmented)
+                            .frame(width: 250)
+                            .disabled(store.completionEffect == .off)
+                        }
+
+                        Divider()
+                            .overlay(Color.white.opacity(0.08))
+
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Preview animation")
+                                    .font(.system(size: 12, weight: .medium))
+                                Text("Play the selected base completion effect.")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Color.white.opacity(0.55))
+                            }
+
+                            Spacer()
+
+                            Button("Preview", action: onPreviewCompletion)
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                                .disabled(store.completionEffect == .off)
+                        }
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 11)
                     }
                     .background(Color.white.opacity(0.035))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -186,20 +276,22 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         .disabled(store.isRefreshing)
                     }
-                }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 18)
-                .padding(.top, contentTop + (hasHardwareNotch ? 9 : 14))
-                .frame(maxWidth: 600)
-                .frame(maxWidth: .infinity)
-                .background {
-                    GeometryReader { contentGeometry in
-                        Color.clear.preference(
-                            key: SettingsContentHeightPreferenceKey.self,
-                            value: contentGeometry.size.height
-                        )
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 18)
+                    .padding(.top, contentTop + (hasHardwareNotch ? 9 : 14))
+                    .frame(maxWidth: 600)
+                    .frame(maxWidth: .infinity)
+                    .background {
+                        GeometryReader { contentGeometry in
+                            Color.clear.preference(
+                                key: SettingsContentHeightPreferenceKey.self,
+                                value: contentGeometry.size.height
+                            )
+                        }
                     }
                 }
+                .scrollIndicators(.visible)
 
             }
             .frame(
@@ -224,6 +316,49 @@ struct SettingsView: View {
         .onAppear {
             store.startPolling()
         }
+    }
+}
+
+private struct SettingControlRow<Control: View>: View {
+    let title: String
+    let detail: String
+    let systemImage: String
+    let control: Control
+
+    init(
+        title: String,
+        detail: String,
+        systemImage: String,
+        @ViewBuilder control: () -> Control
+    ) {
+        self.title = title
+        self.detail = detail
+        self.systemImage = systemImage
+        self.control = control()
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(StatusBadgeKind.working.tint)
+                .frame(width: 20)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+
+                Text(detail)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.55))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 16)
+            control
+        }
+        .padding(.horizontal, 13)
+        .padding(.vertical, 11)
     }
 }
 
@@ -276,6 +411,6 @@ private struct SettingsContentHeightPreferenceKey: PreferenceKey {
         neckWidth: 185,
         hasHardwareNotch: true
     )
-    .frame(width: 720, height: 420)
+    .frame(width: 720, height: 520)
     .background(Color.gray.opacity(0.4))
 }

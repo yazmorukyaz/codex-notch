@@ -27,12 +27,16 @@
 		5A5EB2CD943AB310E99C6FC3 /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AEB1B6FC48C32BA947326D9 /* AppRuntime.swift */; };
 		5BABC18E3E914D08367E289F /* CodexNotchCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F602FEA67DC8CB5D409CAC9 /* CodexNotchCore.framework */; };
 		5FCD33943E81562DD42B47C7 /* NotchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810FBBB9082E8A2B1E2203EA /* NotchPanel.swift */; };
+		6887960AC6B996BFC8DED6D9 /* CodexApplicationDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9DF8D4307A5FEE4C617EE14 /* CodexApplicationDetector.swift */; };
 		6D18FC988EAEC50279FB066B /* CompletionProjectSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A139D0B5C6A2F0B055A1E11 /* CompletionProjectSummary.swift */; };
 		718AC0C299E49542734C220B /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113528ECFA260B93ADC95F48 /* TaskRowView.swift */; };
 		7796BB79C0D15D94637357B4 /* PanelGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CFA714E942A518BE68A1CC /* PanelGeometryTests.swift */; };
 		83592D8507D7345A1B5265F4 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D8A3E3337894F687328FD83 /* libsqlite3.tbd */; };
+		8FC6547F95621C0B5CC30E19 /* CompletionFeedbackPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 213F3EE199307B7042608E9D /* CompletionFeedbackPolicyTests.swift */; };
 		9481D89FDEF7E6F6FFC9C5E0 /* CodexHandoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1088F0491C4C3BEF382A27A9 /* CodexHandoff.swift */; };
 		9A6E06639554BF72B3D6FDF2 /* CompletionProjectSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056F1381F2B87CE1F2D854B6 /* CompletionProjectSummaryTests.swift */; };
+		9AE662F56059CC7FABF23EF0 /* CompletionFeedbackPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAF1C2593804B9FE10FB8297 /* CompletionFeedbackPolicy.swift */; };
+		A012AF63D420E3CCB8E9D941 /* FeedbackPreferencesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BDD49812D76E5BBCB6D5DF7 /* FeedbackPreferencesTests.swift */; };
 		A63C5790997AD3A16DAEF8D9 /* CodexNotchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D7A8CE2ABC165CBEC00D2C /* CodexNotchApp.swift */; };
 		A67D4138ABE5E46CC4E3C2F6 /* CodexLocalRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1AD4E26DE61116BBB1DD959 /* CodexLocalRepositoryTests.swift */; };
 		B99BDF4A94AE1C16F3292B4C /* FullScreenCompletionCelebrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE1B4D1F84E87F4574FFD2A /* FullScreenCompletionCelebrationView.swift */; };
@@ -107,8 +111,10 @@
 		1088F0491C4C3BEF382A27A9 /* CodexHandoff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexHandoff.swift; sourceTree = "<group>"; };
 		113528ECFA260B93ADC95F48 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
 		1D7AB3B5D4A356773281756F /* DashboardStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardStore.swift; sourceTree = "<group>"; };
+		213F3EE199307B7042608E9D /* CompletionFeedbackPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionFeedbackPolicyTests.swift; sourceTree = "<group>"; };
 		234517A7E80D1003383C6082 /* CodexNotch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodexNotch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		26FE17F8BD60E55C866E6AA6 /* DashboardDiagnosticsExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardDiagnosticsExporter.swift; sourceTree = "<group>"; };
+		3BDD49812D76E5BBCB6D5DF7 /* FeedbackPreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackPreferencesTests.swift; sourceTree = "<group>"; };
 		3E96142687969A0966DF6EA2 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
 		491E6ABC3E5BDEBFC24FCF0C /* DashboardPreviewExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardPreviewExporter.swift; sourceTree = "<group>"; };
 		4AEBD4336C0F1A57A143D1FF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -135,9 +141,11 @@
 		D243DBE5E4F20FF69D62C94D /* ExpandedSurfaceTransitionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedSurfaceTransitionUITests.swift; sourceTree = "<group>"; };
 		D3174CD1AFBFF27B925D5CB2 /* CodexLocalRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexLocalRepository.swift; sourceTree = "<group>"; };
 		D36022352B77C23F8EA71B12 /* TaskStateClassifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskStateClassifierTests.swift; sourceTree = "<group>"; };
+		D9DF8D4307A5FEE4C617EE14 /* CodexApplicationDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexApplicationDetector.swift; sourceTree = "<group>"; };
 		DBAF838B12AC7B42E7E6245D /* DashboardSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSnapshot.swift; sourceTree = "<group>"; };
 		E2FF8BD661B9C29C1D08F844 /* CompactStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactStatusView.swift; sourceTree = "<group>"; };
 		E3B8F2AAF2682E2D7563A907 /* NotchDropShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchDropShape.swift; sourceTree = "<group>"; };
+		EAF1C2593804B9FE10FB8297 /* CompletionFeedbackPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionFeedbackPolicy.swift; sourceTree = "<group>"; };
 		EC6B24938464BCBCE96451B2 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		EDE1B4D1F84E87F4574FFD2A /* FullScreenCompletionCelebrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenCompletionCelebrationView.swift; sourceTree = "<group>"; };
 		EDFDD7276A62BD5E65866F82 /* CodexNotchCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CodexNotchCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -174,6 +182,7 @@
 		2441C353C53A948D589BBAB6 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				6C87745A04DDDF1F9E8BCDB7 /* Feedback */,
 				C96723F598D138355922319C /* Models */,
 				B3C2806E82BDDDA675DA8A98 /* Services */,
 				6208BD0598037674D9DB0C4C /* Windowing */,
@@ -198,7 +207,9 @@
 			isa = PBXGroup;
 			children = (
 				B1AD4E26DE61116BBB1DD959 /* CodexLocalRepositoryTests.swift */,
+				213F3EE199307B7042608E9D /* CompletionFeedbackPolicyTests.swift */,
 				056F1381F2B87CE1F2D854B6 /* CompletionProjectSummaryTests.swift */,
+				3BDD49812D76E5BBCB6D5DF7 /* FeedbackPreferencesTests.swift */,
 				A0CFA714E942A518BE68A1CC /* PanelGeometryTests.swift */,
 				7DF232959ECD8E4F7EB24729 /* RolloutParserTests.swift */,
 				D36022352B77C23F8EA71B12 /* TaskStateClassifierTests.swift */,
@@ -213,6 +224,14 @@
 				0C5F42E7B15155FCD26E695B /* PanelGeometry.swift */,
 			);
 			path = Windowing;
+			sourceTree = "<group>";
+		};
+		6C87745A04DDDF1F9E8BCDB7 /* Feedback */ = {
+			isa = PBXGroup;
+			children = (
+				EAF1C2593804B9FE10FB8297 /* CompletionFeedbackPolicy.swift */,
+			);
+			path = Feedback;
 			sourceTree = "<group>";
 		};
 		6DF41E7A7F54D7C55C5BD39B /* UITests */ = {
@@ -284,6 +303,7 @@
 		C8B266877FF4BC367F51125F /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				D9DF8D4307A5FEE4C617EE14 /* CodexApplicationDetector.swift */,
 				1088F0491C4C3BEF382A27A9 /* CodexHandoff.swift */,
 				70619A5CEA2D9437E8A61C16 /* CompletionScreenPreviewExporter.swift */,
 				26FE17F8BD60E55C866E6AA6 /* DashboardDiagnosticsExporter.swift */,
@@ -448,6 +468,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5A5EB2CD943AB310E99C6FC3 /* AppRuntime.swift in Sources */,
+				6887960AC6B996BFC8DED6D9 /* CodexApplicationDetector.swift in Sources */,
 				9481D89FDEF7E6F6FFC9C5E0 /* CodexHandoff.swift in Sources */,
 				A63C5790997AD3A16DAEF8D9 /* CodexNotchApp.swift in Sources */,
 				D4DB7AD4244028C2A375C828 /* CompactStatusView.swift in Sources */,
@@ -476,7 +497,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				A67D4138ABE5E46CC4E3C2F6 /* CodexLocalRepositoryTests.swift in Sources */,
+				8FC6547F95621C0B5CC30E19 /* CompletionFeedbackPolicyTests.swift in Sources */,
 				9A6E06639554BF72B3D6FDF2 /* CompletionProjectSummaryTests.swift in Sources */,
+				A012AF63D420E3CCB8E9D941 /* FeedbackPreferencesTests.swift in Sources */,
 				7796BB79C0D15D94637357B4 /* PanelGeometryTests.swift in Sources */,
 				1B7B830B1FCD1C2F48A5217E /* RolloutParserTests.swift in Sources */,
 				D5E227BC2A812550D0983174 /* TaskStateClassifierTests.swift in Sources */,
@@ -490,6 +513,7 @@
 				C32FF9370C89848174FDCF96 /* CodexLocalRepository.swift in Sources */,
 				0114FAD3994019B1F1EA1DD8 /* CodexStateDatabase.swift in Sources */,
 				18A48A52EF64524697B377C1 /* CodexTask.swift in Sources */,
+				9AE662F56059CC7FABF23EF0 /* CompletionFeedbackPolicy.swift in Sources */,
 				6D18FC988EAEC50279FB066B /* CompletionProjectSummary.swift in Sources */,
 				0FA810B5554E1D4F7D54265F /* DashboardSnapshot.swift in Sources */,
 				BB8A76A52F6049FDE0B0A9DF /* PanelGeometry.swift in Sources */,

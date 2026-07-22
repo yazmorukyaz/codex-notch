@@ -34,6 +34,9 @@ final class AppRuntime {
     private let notifications: NotificationCoordinator
 
     @ObservationIgnored
+    private let isCodexFrontmost: @MainActor () -> Bool
+
+    @ObservationIgnored
     private var panelCoordinator: PanelCoordinator?
 
     @ObservationIgnored
@@ -41,6 +44,9 @@ final class AppRuntime {
 
     @ObservationIgnored
     private let compactPresencePolicy = CompactPanelPresencePolicy()
+
+    @ObservationIgnored
+    private let completionFeedbackPolicy = CompletionFeedbackPolicy()
 
     @ObservationIgnored
     private var completionExpiryTask: Task<Void, Never>?
@@ -54,7 +60,12 @@ final class AppRuntime {
     @ObservationIgnored
     private var isRunning = false
 
-    init(arguments: [String] = ProcessInfo.processInfo.arguments) {
+    init(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        isCodexFrontmost: @escaping @MainActor () -> Bool = {
+            CodexApplicationDetector.isCodexFrontmost()
+        }
+    ) {
         let dashboardDemoMode = arguments.contains("--demo")
         let settingsDemoMode = arguments.contains("--demo-settings")
         let idleDemoMode = arguments.contains("--demo-idle")
@@ -69,6 +80,7 @@ final class AppRuntime {
             ? .settings
             : (dashboardDemoMode ? .dashboard : .compact)
         self.notifications = NotificationCoordinator()
+        self.isCodexFrontmost = isCodexFrontmost
 
         if dashboardDemoMode || settingsDemoMode {
             self.repository = nil
@@ -188,6 +200,25 @@ final class AppRuntime {
             store.setNotificationsEnabled(granted)
             notificationPermissionDenied = !granted
         }
+    }
+
+    func previewCompletionFeedback() {
+        let presentation = completionFeedbackPolicy.resolve(
+            effect: store.completionEffect,
+            codexActiveBehavior: .keepSelectedEffect,
+            isCodexActive: false
+        )
+        guard presentation != .hidden else { return }
+
+        presentCompletionFeedback(
+            completedCount: 1,
+            remainingActiveCount: store.activeTaskCount,
+            projectSummary: CompletionProjectSummary.text(
+                for: ["Codex Notch"],
+                privacyMode: store.privacyMode
+            ),
+            presentation: presentation
+        )
     }
 
     /// Receives an intrinsic body height from the currently visible expanded
@@ -319,18 +350,47 @@ final class AppRuntime {
     private func presentCompletionCelebration(for batch: DashboardCompletionBatch) {
         guard isRunning, !batch.tasks.isEmpty else { return }
 
-        nextCelebrationID &+= 1
-        let event = CompletionCelebrationEvent(
-            id: nextCelebrationID,
+        let presentation = completionFeedbackPolicy.resolve(
+            effect: store.completionEffect,
+            codexActiveBehavior: store.codexActiveCompletionBehavior,
+            isCodexActive: isCodexFrontmost()
+        )
+        guard presentation != .hidden else { return }
+
+        presentCompletionFeedback(
             completedCount: batch.tasks.count,
             remainingActiveCount: store.activeTaskCount,
             projectSummary: CompletionProjectSummary.text(
                 for: batch.tasks.map(\.projectName),
                 privacyMode: store.privacyMode
-            )
+            ),
+            presentation: presentation
         )
-        completionCelebration = event
-        completionOverlayCoordinator?.present(event)
+    }
+
+    private func presentCompletionFeedback(
+        completedCount: Int,
+        remainingActiveCount: Int,
+        projectSummary: String,
+        presentation: CompletionFeedbackPresentation
+    ) {
+        nextCelebrationID &+= 1
+        let event = CompletionCelebrationEvent(
+            id: nextCelebrationID,
+            completedCount: completedCount,
+            remainingActiveCount: remainingActiveCount,
+            projectSummary: projectSummary
+        )
+        completionCelebration = presentation.showsNotch ? event : nil
+        if presentation.showsNotch, !presentation.showsFullScreen {
+            surface = .compact
+            panelCoordinator?.showCompact()
+        }
+        if presentation.showsFullScreen {
+            completionOverlayCoordinator?.present(event)
+        } else {
+            completionOverlayCoordinator?.dismiss()
+        }
 
         celebrationDismissTask?.cancel()
         celebrationDismissTask = Task { @MainActor [weak self] in
@@ -343,6 +403,7 @@ final class AppRuntime {
             guard self?.completionCelebration?.id == event.id else { return }
             self?.completionOverlayCoordinator?.dismiss()
             self?.completionCelebration = nil
+            self?.reconcileCompactPresence()
         }
     }
 

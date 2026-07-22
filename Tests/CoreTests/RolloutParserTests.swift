@@ -87,7 +87,7 @@ final class RolloutParserTests: XCTestCase {
 
         let waiting = parser.parse(joinedLines([start, request]), sourceThreadID: "thread-1")
 
-        XCTAssertEqual(waiting.activityLabel, "Needs attention")
+        XCTAssertEqual(waiting.activityLabel, "Needs approval")
         XCTAssertNotNil(waiting.evidence.attentionSince)
         XCTAssertEqual(
             TaskStateClassifier().classify(
@@ -108,6 +108,30 @@ final class RolloutParserTests: XCTestCase {
 
         XCTAssertEqual(resumed.activityLabel, "Running command")
         XCTAssertNil(resumed.evidence.attentionSince)
+    }
+
+    func testUserInputAttentionIsLabeledNeedsAnswer() throws {
+        let data = joinedLines([
+            eventLine(timestamp: "1970-01-01T00:16:40.000Z", payload: [
+                "type": "task_started", "turn_id": "turn-1", "started_at": 1_000
+            ]),
+            eventLine(timestamp: "1970-01-01T00:16:41.000Z", payload: [
+                "type": "request_user_input",
+                "questions": "private question content must not be surfaced"
+            ])
+        ])
+
+        let snapshot = RolloutParser().parse(data, sourceThreadID: "thread-1")
+
+        XCTAssertEqual(snapshot.activityLabel, "Needs answer")
+        XCTAssertNotNil(snapshot.evidence.attentionSince)
+        XCTAssertEqual(
+            TaskStateClassifier().classify(
+                snapshot.evidence,
+                now: Date(timeIntervalSince1970: 1_002)
+            ),
+            .needsAttention
+        )
     }
 
     func testExpandedBoundedScanFindsLongRunningStart() throws {

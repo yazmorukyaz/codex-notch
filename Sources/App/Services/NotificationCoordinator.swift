@@ -20,12 +20,14 @@ final class NotificationCoordinator {
     }
 
     func deliverTransition(for task: CodexTaskSnapshot, privacyMode: Bool) async {
-        guard let message = message(for: task.state) else { return }
+        guard let message = message(for: task) else { return }
 
         let transitionKey = [
             task.id,
             task.activeTurnID ?? "latest",
             task.state.rawValue,
+            task.activityLabel ?? "activity",
+            String((task.lastActivityAt ?? task.observedAt).timeIntervalSince1970),
         ].joined(separator: ":")
 
         guard deliveredKeys.insert(transitionKey).inserted else { return }
@@ -45,9 +47,17 @@ final class NotificationCoordinator {
         try? await center.add(request)
     }
 
-    private func message(for state: CodexTaskDisplayState) -> (publicText: String, privateText: String)? {
-        switch state {
+    private func message(
+        for task: CodexTaskSnapshot
+    ) -> (publicText: String, privateText: String)? {
+        switch task.state {
         case .needsAttention:
+            if task.activityLabel == "Needs approval" {
+                return ("Approval required", "A task needs approval")
+            }
+            if task.activityLabel == "Needs answer" {
+                return ("Answer required", "A task needs an answer")
+            }
             return ("Needs you", "A task needs you")
         case .completed:
             return ("Finished", "A task finished")

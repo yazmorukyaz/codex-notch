@@ -62,16 +62,18 @@ the rest of your work keeps running.
 ## Highlights
 
 - Watches the 12 most recent primary Codex tasks across local projects.
-- Separates working, needs-attention, completed, interrupted, stale, and
-  unverified states using explicit local lifecycle evidence.
+- Separates working, approval-needed, answer-needed, completed, interrupted,
+  stale, and unverified states using explicit local lifecycle evidence.
 - Counts active child agents from their own open-turn evidence.
 - Shows the latest rate-limit windows and reset times observed in local Codex
   rollouts; it does not invent percentages or ETAs.
 - Opens the exact task in Codex through `codex://threads/<thread-id>`.
 - Celebrates genuine completions with a click-through, Reduce Motion-aware
-  screen animation that names the finished project.
-- Supports Privacy Mode, Quiet Mode, opt-in notifications, always-available
-  menu-bar controls, and a top-center fallback on displays without a notch.
+  animation that names the finished project. Choose Full screen, Notch only,
+  or Off, with a separate override while Codex is frontmost.
+- Supports Privacy Mode, Quiet Mode with an urgent approval/answer bypass,
+  opt-in notifications, always-available menu-bar controls, and a top-center
+  fallback on displays without a notch.
 - Makes no network requests and never writes to Codex's database or rollout
   files.
 

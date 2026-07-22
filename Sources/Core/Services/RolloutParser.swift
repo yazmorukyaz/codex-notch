@@ -174,7 +174,7 @@ struct RolloutParser: Sendable {
                 latestTurnStartedAt: latestStartedAt,
                 latestTurnFinishedAt: latestFinishedAt,
                 terminalKind: terminalKind,
-                attentionSince: activityLabel == "Needs attention" ? activityLabelAt : nil,
+                attentionSince: isAttentionLabel(activityLabel) ? activityLabelAt : nil,
                 lastActivityAt: lastActivityAt
             ),
             activeTurnID: hasOpenTurn ? latestStartedTurnID : nil,
@@ -332,12 +332,17 @@ struct RolloutParser: Sendable {
              "collab_agent_interaction_begin", "collab_agent_interaction_end",
              "collab_waiting_begin", "collab_waiting_end":
             return "Coordinating agents"
-        case "exec_approval_request", "apply_patch_approval_request",
-             "request_user_input", "elicitation_request":
-            return "Needs attention"
+        case "exec_approval_request", "apply_patch_approval_request":
+            return "Needs approval"
+        case "request_user_input", "elicitation_request":
+            return "Needs answer"
         default:
             return nil
         }
+    }
+
+    private func isAttentionLabel(_ label: String?) -> Bool {
+        label == "Needs approval" || label == "Needs answer"
     }
 
     private func usageLimits(

@@ -22,7 +22,12 @@ final class ExpandedSurfaceTransitionUITests: XCTestCase {
             app.staticTexts["Settings"],
             app.staticTexts["Notifications"],
             app.staticTexts["Quiet mode"],
+            app.staticTexts["Urgent alerts in Quiet Mode"],
             app.staticTexts["Privacy mode"],
+            app.staticTexts["Completion feedback"],
+            app.staticTexts["Completion effect"],
+            app.staticTexts["While Codex is active"],
+            app.staticTexts["Preview animation"],
             app.staticTexts["Source"],
         ]
 
