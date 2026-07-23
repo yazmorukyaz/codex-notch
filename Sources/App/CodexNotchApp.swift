@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     presentation: request.presentation,
                     includesBackdrop: request.includesBackdrop,
                     celebrationPreviewElapsed: request.celebrationPreviewElapsed,
+                    attentionPreviewElapsed: request.attentionPreviewElapsed,
                     to: request.destination
                 )
                 print("Exported Codex Notch preview to \(request.destination.path)")

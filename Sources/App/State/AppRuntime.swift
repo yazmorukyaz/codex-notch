@@ -60,6 +60,12 @@ final class AppRuntime {
     @ObservationIgnored
     private var isRunning = false
 
+    @ObservationIgnored
+    private let restingCompactBodyHeight: CGFloat = 18
+
+    @ObservationIgnored
+    private let attentionCompactBodyHeight: CGFloat = 54
+
     init(
         arguments: [String] = ProcessInfo.processInfo.arguments,
         isCodexFrontmost: @escaping @MainActor () -> Bool = {
@@ -69,12 +75,14 @@ final class AppRuntime {
         let dashboardDemoMode = arguments.contains("--demo")
         let settingsDemoMode = arguments.contains("--demo-settings")
         let idleDemoMode = arguments.contains("--demo-idle")
+        let attentionDemoMode = arguments.contains("--demo-attention")
         let celebrationDemoMode = arguments.contains("--demo-celebration")
             || arguments.contains("--demo-screen-celebration")
             || arguments.contains("--smoke-test-screen-celebration")
         self.isDemoMode = dashboardDemoMode
             || settingsDemoMode
             || idleDemoMode
+            || attentionDemoMode
             || celebrationDemoMode
         self.surface = settingsDemoMode
             ? .settings
@@ -82,7 +90,7 @@ final class AppRuntime {
         self.notifications = NotificationCoordinator()
         self.isCodexFrontmost = isCodexFrontmost
 
-        if dashboardDemoMode || settingsDemoMode {
+        if dashboardDemoMode || settingsDemoMode || attentionDemoMode {
             self.repository = nil
             self.store = DashboardStore.demo()
         } else if celebrationDemoMode {
@@ -296,6 +304,16 @@ final class AppRuntime {
             completedActivityDates: completedActivityDates,
             interruptedActivityDates: interruptedActivityDates,
             now: now
+        )
+        let compactBodyHeight: CGFloat
+        if case .needsAttention = compactPresence {
+            compactBodyHeight = attentionCompactBodyHeight
+        } else {
+            compactBodyHeight = restingCompactBodyHeight
+        }
+        panelCoordinator?.updateCompactBodyHeight(
+            compactBodyHeight,
+            animated: animated
         )
         scheduleCompletionExpiry(
             terminalActivityDates: completedActivityDates + interruptedActivityDates,

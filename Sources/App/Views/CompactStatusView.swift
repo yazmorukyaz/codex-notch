@@ -6,6 +6,7 @@ struct CompactStatusView: View {
     let presence: CompactPanelPresence
     let completionCelebration: CompletionCelebrationEvent?
     let celebrationPreviewElapsed: TimeInterval?
+    let attentionPreviewElapsed: TimeInterval?
     let neckWidth: CGFloat
     let hasHardwareNotch: Bool
     let onExpand: () -> Void
@@ -17,6 +18,7 @@ struct CompactStatusView: View {
         presence: CompactPanelPresence,
         completionCelebration: CompletionCelebrationEvent? = nil,
         celebrationPreviewElapsed: TimeInterval? = nil,
+        attentionPreviewElapsed: TimeInterval? = nil,
         neckWidth: CGFloat = 185,
         hasHardwareNotch: Bool = true,
         onExpand: @escaping () -> Void
@@ -25,6 +27,7 @@ struct CompactStatusView: View {
         self.presence = presence
         self.completionCelebration = completionCelebration
         self.celebrationPreviewElapsed = celebrationPreviewElapsed
+        self.attentionPreviewElapsed = attentionPreviewElapsed
         self.neckWidth = neckWidth
         self.hasHardwareNotch = hasHardwareNotch
         self.onExpand = onExpand
@@ -106,9 +109,14 @@ struct CompactStatusView: View {
             neckWidth: neckWidth,
             flareHeight: 0,
             outerTopCornerRadius: 0,
-            bottomCornerRadius: 9,
+            bottomCornerRadius: isAttention ? 13 : 9,
             hasHardwareNotch: hasHardwareNotch
         )
+    }
+
+    private var isAttention: Bool {
+        if case .needsAttention = presence { return true }
+        return false
     }
 
     var body: some View {
@@ -117,21 +125,32 @@ struct CompactStatusView: View {
                 shell.fill(Color.black)
 
                 Button(action: onExpand) {
-                    HStack(spacing: 5.5) {
-                        Circle()
-                            .fill(summary.tint)
-                            .frame(width: 4.5, height: 4.5)
-
-                        Text(summary.text)
-                            .font(.system(size: 10.5, weight: .medium))
-                            .foregroundStyle(
-                                Color.white.opacity(isHovering ? 0.94 : 0.84)
+                    Group {
+                        if case .needsAttention(let count) = presence {
+                            ApprovalRobotAttentionView(
+                                count: count,
+                                tint: summary.tint,
+                                isHovering: isHovering,
+                                previewElapsed: attentionPreviewElapsed
                             )
-                            .monospacedDigit()
-                            .lineLimit(1)
+                        } else {
+                            HStack(spacing: 5.5) {
+                                Circle()
+                                    .fill(summary.tint)
+                                    .frame(width: 4.5, height: 4.5)
+
+                                Text(summary.text)
+                                    .font(.system(size: 10.5, weight: .medium))
+                                    .foregroundStyle(
+                                        Color.white.opacity(isHovering ? 0.94 : 0.84)
+                                    )
+                                    .monospacedDigit()
+                                    .lineLimit(1)
+                            }
+                            .padding(.horizontal, 9)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
                     }
-                    .padding(.horizontal, 9)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -168,6 +187,170 @@ struct CompactStatusView: View {
         plural: String
     ) -> String {
         "\(count) \(count == 1 ? singular : plural)"
+    }
+}
+
+private struct ApprovalRobotAttentionView: View {
+    let count: Int
+    let tint: Color
+    let isHovering: Bool
+    let previewElapsed: TimeInterval?
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var startedAt = Date.now
+
+    var body: some View {
+        Group {
+            if let previewElapsed {
+                animatedFrame(at: previewElapsed)
+            } else if reduceMotion {
+                frame(
+                    shake: 0,
+                    robotLift: 0,
+                    signScale: 1,
+                    glowOpacity: 0.16
+                )
+            } else {
+                TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+                    let elapsed = max(0, context.date.timeIntervalSince(startedAt))
+                    animatedFrame(at: elapsed)
+                }
+            }
+        }
+        .onAppear {
+            startedAt = .now
+        }
+    }
+
+    private func animatedFrame(at elapsed: TimeInterval) -> some View {
+        let cycle = elapsed.truncatingRemainder(dividingBy: 7.5)
+        let entrance = min(1, elapsed / 0.38)
+        let knockWindow = cycle < 1.15 ? 1 - (cycle / 1.15) : 0
+        let shake = sin(cycle * 34) * 2.2 * knockWindow * entrance
+        let lift = -abs(sin(cycle * 16)) * 2.4 * knockWindow
+        let pulse = (sin(elapsed * 4.8) + 1) / 2
+
+        return frame(
+            shake: CGFloat(shake),
+            robotLift: CGFloat(lift + ((1 - entrance) * -22)),
+            signScale: CGFloat(0.96 + (pulse * 0.08)),
+            glowOpacity: 0.10 + (pulse * 0.13)
+        )
+    }
+
+    private func frame(
+        shake: CGFloat,
+        robotLift: CGFloat,
+        signScale: CGFloat,
+        glowOpacity: Double
+    ) -> some View {
+        ZStack {
+            tint.opacity(glowOpacity)
+
+            HStack(spacing: 7) {
+                ApprovalRobotMascot(tint: tint)
+                    .frame(width: 34, height: 36)
+                    .offset(x: shake, y: robotLift)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("APPROVE?")
+                        .font(.system(size: 11, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .tracking(0.35)
+                        .scaleEffect(signScale, anchor: .leading)
+
+                    Text(
+                        count == 1
+                            ? "1 task needs you"
+                            : "\(count) tasks need you"
+                    )
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(
+                        Color.white.opacity(isHovering ? 0.92 : 0.72)
+                    )
+                    .monospacedDigit()
+                    .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(tint.opacity(0.92))
+            }
+            .padding(.leading, 9)
+            .padding(.trailing, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(tint.opacity(glowOpacity * 1.8), lineWidth: 1)
+                .padding(1)
+        }
+    }
+}
+
+private struct ApprovalRobotMascot: View {
+    let tint: Color
+
+    var body: some View {
+        ZStack {
+            Capsule()
+                .fill(tint.opacity(0.32))
+                .frame(width: 25, height: 5)
+                .offset(y: 14)
+
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.95),
+                            Color.white.opacity(0.68)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 27, height: 23)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(Color.black.opacity(0.88))
+                        .frame(width: 21, height: 12)
+                        .overlay {
+                            HStack(spacing: 6) {
+                                Circle().fill(tint)
+                                Circle().fill(tint)
+                            }
+                            .frame(width: 12, height: 3.5)
+                        }
+                        .offset(y: -1)
+                }
+                .overlay(alignment: .top) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.82))
+                        .frame(width: 2, height: 6)
+                        .offset(y: -5)
+                        .overlay(alignment: .top) {
+                            Circle()
+                                .fill(tint)
+                                .frame(width: 4, height: 4)
+                                .offset(y: -8)
+                        }
+                }
+
+            Capsule()
+                .fill(Color.white.opacity(0.8))
+                .frame(width: 4, height: 13)
+                .rotationEffect(.degrees(-38), anchor: .bottom)
+                .offset(x: 15, y: 4)
+
+            Circle()
+                .fill(tint)
+                .frame(width: 6, height: 6)
+                .offset(x: 20, y: -3)
+        }
+        .shadow(color: tint.opacity(0.55), radius: 5)
+        .accessibilityHidden(true)
     }
 }
 

@@ -29,9 +29,14 @@ public struct TaskStateEvidence: Sendable {
 
 public struct TaskStateClassifier: Sendable {
     public let staleAfter: TimeInterval
+    public let attentionDelay: TimeInterval
 
-    public init(staleAfter: TimeInterval = 120) {
+    public init(
+        staleAfter: TimeInterval = 120,
+        attentionDelay: TimeInterval = 1.5
+    ) {
         self.staleAfter = staleAfter
+        self.attentionDelay = max(0, attentionDelay)
     }
 
     public func classify(_ evidence: TaskStateEvidence, now: Date) -> CodexTaskDisplayState {
@@ -44,7 +49,8 @@ public struct TaskStateClassifier: Sendable {
 
         if let attentionSince = evidence.attentionSince,
            hasOpenTurn,
-           attentionSince >= (startedAt ?? .distantPast) {
+           attentionSince >= (startedAt ?? .distantPast),
+           now.timeIntervalSince(attentionSince) >= attentionDelay {
             return .needsAttention
         }
 

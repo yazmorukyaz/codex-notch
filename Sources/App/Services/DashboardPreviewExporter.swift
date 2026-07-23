@@ -16,7 +16,7 @@ enum DashboardPreviewExporter {
 
         var size: CGSize {
             switch self {
-            case .compact: CGSize(width: 185, height: 50)
+            case .compact: CGSize(width: 185, height: 86)
             case .expanded: CGSize(width: 720, height: 552)
             }
         }
@@ -27,6 +27,7 @@ enum DashboardPreviewExporter {
         let presentation: Presentation
         let includesBackdrop: Bool
         let celebrationPreviewElapsed: TimeInterval?
+        let attentionPreviewElapsed: TimeInterval?
     }
 
     enum ExportError: Error {
@@ -35,15 +36,21 @@ enum DashboardPreviewExporter {
     }
 
     static func request(from arguments: [String]) -> Request? {
-        let definitions: [(String, Presentation, Bool, TimeInterval?)] = [
-            ("--export-celebration-preview-board", .compact, true, 0.24),
-            ("--export-compact-preview-board", .compact, true, nil),
-            ("--export-preview-board", .expanded, true, nil),
-            (Presentation.compact.flag, .compact, false, nil),
-            (Presentation.expanded.flag, .expanded, false, nil)
+        let definitions: [(String, Presentation, Bool, TimeInterval?, TimeInterval?)] = [
+            ("--export-celebration-preview-board", .compact, true, 0.24, nil),
+            ("--export-compact-preview-board", .compact, true, nil, 0.52),
+            ("--export-preview-board", .expanded, true, nil, nil),
+            (Presentation.compact.flag, .compact, false, nil, 0.52),
+            (Presentation.expanded.flag, .expanded, false, nil, nil)
         ]
 
-        for (flag, presentation, includesBackdrop, celebrationPreviewElapsed) in definitions {
+        for (
+            flag,
+            presentation,
+            includesBackdrop,
+            celebrationPreviewElapsed,
+            attentionPreviewElapsed
+        ) in definitions {
             guard let flagIndex = arguments.firstIndex(of: flag),
                   arguments.indices.contains(flagIndex + 1) else {
                 continue
@@ -53,7 +60,8 @@ enum DashboardPreviewExporter {
                 destination: URL(fileURLWithPath: arguments[flagIndex + 1]),
                 presentation: presentation,
                 includesBackdrop: includesBackdrop,
-                celebrationPreviewElapsed: celebrationPreviewElapsed
+                celebrationPreviewElapsed: celebrationPreviewElapsed,
+                attentionPreviewElapsed: attentionPreviewElapsed
             )
         }
 
@@ -65,6 +73,7 @@ enum DashboardPreviewExporter {
         presentation: Presentation,
         includesBackdrop: Bool = false,
         celebrationPreviewElapsed: TimeInterval? = nil,
+        attentionPreviewElapsed: TimeInterval? = nil,
         to destination: URL
     ) throws {
         let size = includesBackdrop
@@ -75,13 +84,15 @@ enum DashboardPreviewExporter {
                 NotchPreviewBoard(
                     store: store,
                     presentation: presentation,
-                    celebrationPreviewElapsed: celebrationPreviewElapsed
+                    celebrationPreviewElapsed: celebrationPreviewElapsed,
+                    attentionPreviewElapsed: attentionPreviewElapsed
                 )
             } else {
                 NotchPreviewSurface(
                     store: store,
                     presentation: presentation,
-                    celebrationPreviewElapsed: celebrationPreviewElapsed
+                    celebrationPreviewElapsed: celebrationPreviewElapsed,
+                    attentionPreviewElapsed: attentionPreviewElapsed
                 )
             }
         }
@@ -125,6 +136,7 @@ private struct NotchPreviewBoard: View {
     let store: DashboardStore
     let presentation: DashboardPreviewExporter.Presentation
     let celebrationPreviewElapsed: TimeInterval?
+    let attentionPreviewElapsed: TimeInterval?
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -144,7 +156,8 @@ private struct NotchPreviewBoard: View {
             NotchPreviewSurface(
                 store: store,
                 presentation: presentation,
-                celebrationPreviewElapsed: celebrationPreviewElapsed
+                celebrationPreviewElapsed: celebrationPreviewElapsed,
+                attentionPreviewElapsed: attentionPreviewElapsed
             )
             .frame(
                 width: presentation.size.width,
@@ -158,6 +171,7 @@ private struct NotchPreviewSurface: View {
     let store: DashboardStore
     let presentation: DashboardPreviewExporter.Presentation
     let celebrationPreviewElapsed: TimeInterval?
+    let attentionPreviewElapsed: TimeInterval?
 
     private let neckWidth: CGFloat = 185
     private let reservedTopHeight: CGFloat = 32
@@ -193,11 +207,15 @@ private struct NotchPreviewSurface: View {
                     )
                 },
                 celebrationPreviewElapsed: celebrationPreviewElapsed,
+                attentionPreviewElapsed: attentionPreviewElapsed,
                 neckWidth: neckWidth,
                 hasHardwareNotch: true,
                 onExpand: {}
             )
-            .frame(width: 185, height: 18)
+            .frame(
+                width: 185,
+                height: celebrationPreviewElapsed == nil ? 54 : 18
+            )
 
         case .expanded:
             DashboardView(

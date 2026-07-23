@@ -110,6 +110,9 @@ final class DashboardStore {
     private let pollInterval: Duration
 
     @ObservationIgnored
+    private let attentionPollInterval: Duration
+
+    @ObservationIgnored
     private let recentTransitionWindow: TimeInterval
 
     @ObservationIgnored
@@ -128,6 +131,7 @@ final class DashboardStore {
         initialSnapshot: DashboardSnapshot = .empty(),
         userDefaults: UserDefaults = .standard,
         pollInterval: Duration = .seconds(2),
+        attentionPollInterval: Duration = .milliseconds(500),
         recentTransitionWindow: TimeInterval = 30,
         loader: @escaping SnapshotLoader,
         onRecentTransition: TransitionNotificationHandler? = nil,
@@ -138,6 +142,7 @@ final class DashboardStore {
         self.snapshot = initialSnapshot
         self.userDefaults = userDefaults
         self.pollInterval = pollInterval
+        self.attentionPollInterval = attentionPollInterval
         self.recentTransitionWindow = recentTransitionWindow
         self.loader = loader
         self.onRecentTransition = onRecentTransition
@@ -234,19 +239,24 @@ final class DashboardStore {
     func startPolling() {
         guard pollingTask == nil else { return }
 
-        let interval = pollInterval
         pollingTask = Task { [weak self] in
             guard self != nil else { return }
             await self?.refresh()
 
             while !Task.isCancelled {
+                guard let interval = self.map({ store in
+                    store.needsAttentionCount > 0
+                        ? store.attentionPollInterval
+                        : store.pollInterval
+                }) else {
+                    return
+                }
                 do {
                     try await Task.sleep(for: interval)
                 } catch {
                     return
                 }
 
-                guard self != nil else { return }
                 await self?.refresh()
             }
         }

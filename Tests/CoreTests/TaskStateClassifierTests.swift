@@ -3,7 +3,10 @@ import XCTest
 
 final class TaskStateClassifierTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_000)
-    private let classifier = TaskStateClassifier(staleAfter: 120)
+    private let classifier = TaskStateClassifier(
+        staleAfter: 120,
+        attentionDelay: 1.5
+    )
 
     func testOpenRecentTurnIsWorking() {
         let evidence = TaskStateEvidence(
@@ -28,6 +31,26 @@ final class TaskStateClassifierTests: XCTestCase {
             latestTurnStartedAt: now.addingTimeInterval(-60),
             attentionSince: now.addingTimeInterval(-20),
             lastActivityAt: now.addingTimeInterval(-20)
+        )
+
+        XCTAssertEqual(classifier.classify(evidence, now: now), .needsAttention)
+    }
+
+    func testFreshAttentionRequestRemainsWorkingDuringWriteRace() {
+        let evidence = TaskStateEvidence(
+            latestTurnStartedAt: now.addingTimeInterval(-60),
+            attentionSince: now.addingTimeInterval(-0.5),
+            lastActivityAt: now.addingTimeInterval(-0.5)
+        )
+
+        XCTAssertEqual(classifier.classify(evidence, now: now), .working)
+    }
+
+    func testAttentionRequestBecomesVisibleAfterStableDelay() {
+        let evidence = TaskStateEvidence(
+            latestTurnStartedAt: now.addingTimeInterval(-60),
+            attentionSince: now.addingTimeInterval(-1.5),
+            lastActivityAt: now.addingTimeInterval(-1.5)
         )
 
         XCTAssertEqual(classifier.classify(evidence, now: now), .needsAttention)

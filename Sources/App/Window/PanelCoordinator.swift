@@ -18,6 +18,7 @@ final class PanelCoordinator: NSObject {
     private var compactClickRecognizer: NSClickGestureRecognizer?
     private var globalMouseMonitor: EventMonitorToken?
     private var localMouseMonitor: EventMonitorToken?
+    private var compactBodyHeight: CGFloat
     private var expandedBodyHeight: CGFloat?
 
     private(set) var presentation: PanelPresentation = .compact
@@ -44,6 +45,9 @@ final class PanelCoordinator: NSObject {
         self.neckPanel = Self.makeNeckPanel()
         self.panel = NotchPanel()
         self.hostingView = NSHostingView(rootView: content(displayState))
+        self.compactBodyHeight = geometry.resolvedCompactBodyHeight(
+            geometry.metrics.compactSize.height
+        )
         super.init()
 
         configureHostedContent()
@@ -166,6 +170,21 @@ final class PanelCoordinator: NSObject {
         applyFrame(for: .expanded, on: screen, animated: animated)
     }
 
+    func updateCompactBodyHeight(_ height: CGFloat, animated: Bool = true) {
+        let resolvedHeight = geometry.resolvedCompactBodyHeight(height)
+        guard abs(compactBodyHeight - resolvedHeight) >= 1 else { return }
+
+        compactBodyHeight = resolvedHeight
+        guard presentation == .compact,
+              panel.isVisible,
+              let screen = resolvedScreen(preferred: targetScreen) else {
+            return
+        }
+
+        targetScreen = screen
+        applyFrame(for: .compact, on: screen, animated: animated)
+    }
+
     func hide() {
         removeOutsideClickMonitors()
         neckPanel.orderOut(nil)
@@ -273,6 +292,9 @@ final class PanelCoordinator: NSObject {
         let targetFrames = geometry.windowFrames(
             for: presentation,
             on: screenGeometry,
+            compactBodyHeight: presentation == .compact
+                ? compactBodyHeight
+                : nil,
             expandedBodyHeight: presentation == .expanded
                 ? expandedBodyHeight
                 : nil

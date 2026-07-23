@@ -68,6 +68,9 @@ the rest of your work keeps running.
 - Shows the latest rate-limit windows and reset times observed in local Codex
   rollouts; it does not invent percentages or ETAs.
 - Opens the exact task in Codex through `codex://threads/<thread-id>`.
+- Turns approval and answer requests into a taller amber notch alert with a
+  persistent animated robot, while filtering out sub-second request/output
+  races that do not actually need the user.
 - Celebrates genuine completions with a click-through, Reduce Motion-aware
   animation that names the finished project. Choose Full screen, Notch only,
   or Off, with a separate override while Codex is frontmost.
@@ -95,9 +98,10 @@ referenced rollout files. It consumes lifecycle events, fixed activity kinds,
 and rate-limit snapshots—not raw prompt, reasoning, command, or tool-output
 content.
 
-Polling happens locally every two seconds. Unchanged rollout files are cached,
-unknown event types are ignored, and inaccessible or incompatible data becomes
-a visible degraded state rather than a guessed status.
+Polling happens locally every two seconds, increasing to twice per second while
+a task needs attention. Unchanged rollout files are cached, unknown event types
+are ignored, and inaccessible or incompatible data becomes a visible degraded
+state rather than a guessed status.
 
 For the exact data boundary, see [the technical notes](docs/technical-notes.md).
 

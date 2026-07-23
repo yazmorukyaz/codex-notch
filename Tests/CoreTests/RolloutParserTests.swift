@@ -92,7 +92,7 @@ final class RolloutParserTests: XCTestCase {
         XCTAssertEqual(
             TaskStateClassifier().classify(
                 waiting.evidence,
-                now: Date(timeIntervalSince1970: 1_002)
+                now: Date(timeIntervalSince1970: 1_003)
             ),
             .needsAttention
         )
@@ -128,7 +128,7 @@ final class RolloutParserTests: XCTestCase {
         XCTAssertEqual(
             TaskStateClassifier().classify(
                 snapshot.evidence,
-                now: Date(timeIntervalSince1970: 1_002)
+                now: Date(timeIntervalSince1970: 1_003)
             ),
             .needsAttention
         )
@@ -160,7 +160,7 @@ final class RolloutParserTests: XCTestCase {
         XCTAssertEqual(
             TaskStateClassifier().classify(
                 waiting.evidence,
-                now: Date(timeIntervalSince1970: 1_002)
+                now: Date(timeIntervalSince1970: 1_003)
             ),
             .needsAttention
         )

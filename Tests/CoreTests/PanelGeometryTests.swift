@@ -282,6 +282,27 @@ final class PanelGeometryTests: XCTestCase {
         XCTAssertEqual(windows.bodyFrame.maxY, windows.neckFrame?.minY)
     }
 
+    func testAttentionCompactHeightExpandsOnlyTheBodyBelowHardwareNotch() {
+        let screen = PanelScreenGeometry(
+            frame: CGRect(x: 0, y: 0, width: 1_728, height: 1_117),
+            visibleFrame: CGRect(x: 0, y: 0, width: 1_728, height: 1_085),
+            safeAreaInsets: PanelSafeAreaInsets(top: 32),
+            auxiliaryTopLeftArea: CGRect(x: 0, y: 1_085, width: 771, height: 32),
+            auxiliaryTopRightArea: CGRect(x: 956, y: 1_085, width: 772, height: 32)
+        )
+
+        let windows = geometry.windowFrames(
+            for: .compact,
+            on: screen,
+            compactBodyHeight: 54
+        )
+
+        XCTAssertEqual(windows.totalFrame.height, 86)
+        XCTAssertEqual(windows.neckFrame?.height, 32)
+        XCTAssertEqual(windows.bodyFrame.height, 54)
+        XCTAssertEqual(windows.bodyFrame.maxY, windows.neckFrame?.minY)
+    }
+
     func testCompactPresenceKeepsQuietStatesDormant() {
         let policy = CompactPanelPresencePolicy()
         let now = Date(timeIntervalSinceReferenceDate: 1_000)

@@ -242,6 +242,7 @@ public struct PanelGeometry: Sendable {
     public func frame(
         for presentation: PanelPresentation,
         on screen: PanelScreenGeometry,
+        compactBodyHeight: CGFloat? = nil,
         expandedBodyHeight: CGFloat? = nil
     ) -> CGRect {
         let screenFrame = usableScreenFrame(from: screen.frame)
@@ -256,7 +257,9 @@ public struct PanelGeometry: Sendable {
                 width: notch.hasHardwareNotch
                     ? notch.neckWidth
                     : fallbackBodySize.width,
-                height: notch.reservedTopHeight + fallbackBodySize.height
+                height: notch.reservedTopHeight + resolvedCompactBodyHeight(
+                    compactBodyHeight ?? fallbackBodySize.height
+                )
             )
         case .expanded:
             let fallbackSize = sanitized(metrics.expandedSize)
@@ -311,11 +314,13 @@ public struct PanelGeometry: Sendable {
     public func windowFrames(
         for presentation: PanelPresentation,
         on screen: PanelScreenGeometry,
+        compactBodyHeight: CGFloat? = nil,
         expandedBodyHeight: CGFloat? = nil
     ) -> PanelWindowFrames {
         let totalFrame = frame(
             for: presentation,
             on: screen,
+            compactBodyHeight: compactBodyHeight,
             expandedBodyHeight: expandedBodyHeight
         )
         let notch = notchMetrics(on: screen)
@@ -407,6 +412,12 @@ public struct PanelGeometry: Sendable {
             : fallbackBodyHeight
 
         return min(max(sanitizedRequest, lowerBound), upperBound)
+    }
+
+    public func resolvedCompactBodyHeight(_ requestedHeight: CGFloat) -> CGFloat {
+        let fallback = max(1, sanitized(metrics.compactSize).height)
+        guard requestedHeight.isFinite else { return fallback }
+        return max(1, requestedHeight)
     }
 
     private func usableScreenFrame(from frame: CGRect) -> CGRect {
