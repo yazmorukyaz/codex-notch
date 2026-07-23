@@ -69,8 +69,8 @@ the rest of your work keeps running.
   rollouts; it does not invent percentages or ETAs.
 - Opens the exact task in Codex through `codex://threads/<thread-id>`.
 - Turns approval and answer requests into a taller amber notch alert with a
-  persistent animated robot, while filtering out sub-second request/output
-  races that do not actually need the user.
+  persistent animated robot, using explicit request events so automatically
+  reviewed escalated commands do not create false alerts.
 - Celebrates genuine completions with a click-through, Reduce Motion-aware
   animation that names the finished project. Choose Full screen, Notch only,
   or Off, with a separate override while Codex is frontmost.

@@ -26,11 +26,12 @@ Each catalog row points to an append-only rollout JSONL file. The parser reads a
 - `event_msg.payload.type == token_count`
 - selected event types mapped to fixed, non-sensitive activity labels
 
-Persisted approval calls using `sandbox_permissions: require_escalated` are
-labeled **Needs approval** until their matching call output arrives. Persisted
-`request_user_input` calls and elicitation requests are labeled **Needs answer**.
-Both remain attention states until later rollout evidence changes the task
-lifecycle.
+Explicit `exec_approval_request` and `apply_patch_approval_request` events are
+labeled **Needs approval**. The parser deliberately does not infer approval from
+`sandbox_permissions: require_escalated`, because automatically reviewed calls
+use the same flag without requiring user action. Persisted `request_user_input`
+calls and elicitation requests are labeled **Needs answer**. Both remain
+attention states until later rollout evidence changes the task lifecycle.
 
 The latest `token_count.payload.rate_limits` value supplies the real usage windows. The UI labels these values as “used,” displays their reset time, and includes snapshot freshness.
 

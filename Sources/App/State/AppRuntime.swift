@@ -297,6 +297,7 @@ final class AppRuntime {
                 break
             }
         }
+        let previousPresence = compactPresence
         compactPresence = compactPresencePolicy.resolve(
             refreshFailed: compactSourceIsUnavailable,
             needsAttentionCount: store.needsAttentionCount,
@@ -305,6 +306,9 @@ final class AppRuntime {
             interruptedActivityDates: interruptedActivityDates,
             now: now
         )
+        if compactPresence != previousPresence {
+            panelCoordinator?.refreshContent()
+        }
         let compactBodyHeight: CGFloat
         if case .needsAttention = compactPresence {
             compactBodyHeight = attentionCompactBodyHeight

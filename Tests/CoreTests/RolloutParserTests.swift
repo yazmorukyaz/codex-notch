@@ -134,7 +134,7 @@ final class RolloutParserTests: XCTestCase {
         )
     }
 
-    func testRealFunctionCallApprovalIsAttentionUntilMatchingOutputArrives() throws {
+    func testEscalatedFunctionCallWithoutExplicitApprovalRequestStaysWorking() throws {
         let start = eventLine(timestamp: "1970-01-01T00:16:40.000Z", payload: [
             "type": "task_started", "turn_id": "turn-1", "started_at": 1_000
         ])
@@ -151,35 +151,20 @@ final class RolloutParserTests: XCTestCase {
                 ])
             ]
         )
-        let parser = RolloutParser()
-
-        let waiting = parser.parse(joinedLines([start, approval]), sourceThreadID: "thread-1")
-
-        XCTAssertEqual(waiting.activityLabel, "Needs approval")
-        XCTAssertNotNil(waiting.evidence.attentionSince)
-        XCTAssertEqual(
-            TaskStateClassifier().classify(
-                waiting.evidence,
-                now: Date(timeIntervalSince1970: 1_003)
-            ),
-            .needsAttention
+        let snapshot = RolloutParser().parse(
+            joinedLines([start, approval]),
+            sourceThreadID: "thread-1"
         )
 
-        let resolved = parser.parse(joinedLines([
-            start,
-            approval,
-            responseItemLine(
-                timestamp: "1970-01-01T00:16:42.000Z",
-                payload: [
-                    "type": "function_call_output",
-                    "call_id": "call-approval",
-                    "output": "private output must not be surfaced"
-                ]
-            )
-        ]), sourceThreadID: "thread-1")
-
-        XCTAssertEqual(resolved.activityLabel, "Working")
-        XCTAssertNil(resolved.evidence.attentionSince)
+        XCTAssertEqual(snapshot.activityLabel, "Working")
+        XCTAssertNil(snapshot.evidence.attentionSince)
+        XCTAssertEqual(
+            TaskStateClassifier().classify(
+                snapshot.evidence,
+                now: Date(timeIntervalSince1970: 1_003)
+            ),
+            .working
+        )
     }
 
     func testRealRequestUserInputFunctionCallIsLabeledNeedsAnswer() throws {

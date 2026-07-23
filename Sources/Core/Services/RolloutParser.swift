@@ -402,28 +402,7 @@ struct RolloutParser: Sendable {
             )
         }
 
-        guard let arguments = functionCallArguments(from: payload["arguments"]),
-              arguments["sandbox_permissions"] as? String == "require_escalated" else {
-            return nil
-        }
-
-        return PendingAttentionCall(
-            id: callID,
-            label: "Needs approval",
-            requestedAt: requestedAt
-        )
-    }
-
-    private func functionCallArguments(from value: Any?) -> [String: Any]? {
-        if let value = value as? [String: Any] {
-            return value
-        }
-        guard let value = value as? String,
-              let data = value.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) else {
-            return nil
-        }
-        return object as? [String: Any]
+        return nil
     }
 
     private func usageLimits(
