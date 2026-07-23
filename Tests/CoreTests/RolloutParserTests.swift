@@ -134,6 +134,76 @@ final class RolloutParserTests: XCTestCase {
         )
     }
 
+    func testRealFunctionCallApprovalIsAttentionUntilMatchingOutputArrives() throws {
+        let start = eventLine(timestamp: "1970-01-01T00:16:40.000Z", payload: [
+            "type": "task_started", "turn_id": "turn-1", "started_at": 1_000
+        ])
+        let approval = responseItemLine(
+            timestamp: "1970-01-01T00:16:41.000Z",
+            payload: [
+                "type": "function_call",
+                "name": "exec_command",
+                "call_id": "call-approval",
+                "arguments": jsonString([
+                    "cmd": "private command must not be surfaced",
+                    "sandbox_permissions": "require_escalated",
+                    "justification": "Approval is required"
+                ])
+            ]
+        )
+        let parser = RolloutParser()
+
+        let waiting = parser.parse(joinedLines([start, approval]), sourceThreadID: "thread-1")
+
+        XCTAssertEqual(waiting.activityLabel, "Needs approval")
+        XCTAssertNotNil(waiting.evidence.attentionSince)
+        XCTAssertEqual(
+            TaskStateClassifier().classify(
+                waiting.evidence,
+                now: Date(timeIntervalSince1970: 1_002)
+            ),
+            .needsAttention
+        )
+
+        let resolved = parser.parse(joinedLines([
+            start,
+            approval,
+            responseItemLine(
+                timestamp: "1970-01-01T00:16:42.000Z",
+                payload: [
+                    "type": "function_call_output",
+                    "call_id": "call-approval",
+                    "output": "private output must not be surfaced"
+                ]
+            )
+        ]), sourceThreadID: "thread-1")
+
+        XCTAssertEqual(resolved.activityLabel, "Working")
+        XCTAssertNil(resolved.evidence.attentionSince)
+    }
+
+    func testRealRequestUserInputFunctionCallIsLabeledNeedsAnswer() throws {
+        let snapshot = RolloutParser().parse(joinedLines([
+            eventLine(timestamp: "1970-01-01T00:16:40.000Z", payload: [
+                "type": "task_started", "turn_id": "turn-1", "started_at": 1_000
+            ]),
+            responseItemLine(
+                timestamp: "1970-01-01T00:16:41.000Z",
+                payload: [
+                    "type": "function_call",
+                    "name": "request_user_input",
+                    "call_id": "call-input",
+                    "arguments": jsonString([
+                        "questions": "private question content must not be surfaced"
+                    ])
+                ]
+            )
+        ]), sourceThreadID: "thread-1")
+
+        XCTAssertEqual(snapshot.activityLabel, "Needs answer")
+        XCTAssertNotNil(snapshot.evidence.attentionSince)
+    }
+
     func testExpandedBoundedScanFindsLongRunningStart() throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -249,6 +319,21 @@ final class RolloutParserTests: XCTestCase {
             "type": "event_msg",
             "payload": payload
         ]
+        let data = try! JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    private func responseItemLine(timestamp: String, payload: [String: Any]) -> String {
+        let object: [String: Any] = [
+            "timestamp": timestamp,
+            "type": "response_item",
+            "payload": payload
+        ]
+        let data = try! JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    private func jsonString(_ object: [String: Any]) -> String {
         let data = try! JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
         return String(decoding: data, as: UTF8.self)
     }

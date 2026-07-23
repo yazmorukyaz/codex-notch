@@ -91,6 +91,7 @@ struct RolloutParser: Sendable {
         var activityLabelAt: Date?
         var latestUsageLimits: UsageLimitsSnapshot?
         var hasLifecycleEvidence = false
+        var pendingAttentionCalls: [String: PendingAttentionCall] = [:]
 
         for rawLine in data.split(separator: 0x0A, omittingEmptySubsequences: true) {
             guard let envelope = try? JSONSerialization.jsonObject(with: Data(rawLine)),
@@ -104,8 +105,46 @@ struct RolloutParser: Sendable {
                 lastActivityAt = envelopeTimestamp
             }
 
-            guard object["type"] as? String == "event_msg",
-                  let payload = object["payload"] as? [String: Any],
+            guard let envelopeType = object["type"] as? String,
+                  let payload = object["payload"] as? [String: Any] else {
+                continue
+            }
+
+            if envelopeType == "response_item", let envelopeTimestamp {
+                switch payload["type"] as? String {
+                case "function_call":
+                    if let attentionCall = pendingAttentionCall(
+                        from: payload,
+                        requestedAt: envelopeTimestamp
+                    ) {
+                        pendingAttentionCalls[attentionCall.id] = attentionCall
+                        if attentionCall.requestedAt >= (activityLabelAt ?? .distantPast) {
+                            activityLabel = attentionCall.label
+                            activityLabelAt = attentionCall.requestedAt
+                        }
+                    }
+
+                case "function_call_output":
+                    if let callID = payload["call_id"] as? String,
+                       pendingAttentionCalls.removeValue(forKey: callID) != nil {
+                        if let remaining = pendingAttentionCalls.values.max(
+                            by: { $0.requestedAt < $1.requestedAt }
+                        ) {
+                            activityLabel = remaining.label
+                            activityLabelAt = remaining.requestedAt
+                        } else {
+                            activityLabel = "Working"
+                            activityLabelAt = envelopeTimestamp
+                        }
+                    }
+
+                default:
+                    break
+                }
+                continue
+            }
+
+            guard envelopeType == "event_msg",
                   let eventType = payload["type"] as? String else {
                 continue
             }
@@ -157,6 +196,9 @@ struct RolloutParser: Sendable {
             if let label = safeActivityLabel(for: eventType),
                let labelTimestamp = envelopeTimestamp,
                labelTimestamp >= (activityLabelAt ?? .distantPast) {
+                if !isAttentionLabel(label) {
+                    pendingAttentionCalls.removeAll(keepingCapacity: true)
+                }
                 activityLabel = label
                 activityLabelAt = labelTimestamp
             }
@@ -345,6 +387,45 @@ struct RolloutParser: Sendable {
         label == "Needs approval" || label == "Needs answer"
     }
 
+    private func pendingAttentionCall(
+        from payload: [String: Any],
+        requestedAt: Date
+    ) -> PendingAttentionCall? {
+        guard let callID = payload["call_id"] as? String else { return nil }
+
+        let name = payload["name"] as? String
+        if name == "request_user_input" {
+            return PendingAttentionCall(
+                id: callID,
+                label: "Needs answer",
+                requestedAt: requestedAt
+            )
+        }
+
+        guard let arguments = functionCallArguments(from: payload["arguments"]),
+              arguments["sandbox_permissions"] as? String == "require_escalated" else {
+            return nil
+        }
+
+        return PendingAttentionCall(
+            id: callID,
+            label: "Needs approval",
+            requestedAt: requestedAt
+        )
+    }
+
+    private func functionCallArguments(from value: Any?) -> [String: Any]? {
+        if let value = value as? [String: Any] {
+            return value
+        }
+        guard let value = value as? String,
+              let data = value.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) else {
+            return nil
+        }
+        return object as? [String: Any]
+    }
+
     private func usageLimits(
         from value: Any?,
         capturedAt: Date,
@@ -401,6 +482,12 @@ private struct TailRead {
     let data: Data
     let wasTruncated: Bool
     let fileSize: UInt64
+}
+
+private struct PendingAttentionCall {
+    let id: String
+    let label: String
+    let requestedAt: Date
 }
 
 private extension RolloutTailSnapshot {
