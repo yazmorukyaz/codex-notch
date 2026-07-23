@@ -210,7 +210,7 @@ final class RolloutParserTests: XCTestCase {
         XCTAssertEqual(snapshot.activeTurnID, "turn-long")
     }
 
-    func testBackwardScanFindsLifecycleBeyondChunkSize() throws {
+    func testLifecycleScanStopsAtConfiguredLookbackLimit() throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let rolloutURL = directory.appendingPathComponent("rollout.jsonl")
@@ -232,9 +232,8 @@ final class RolloutParserTests: XCTestCase {
         let snapshot = try parser.parseTail(at: rolloutURL, sourceThreadID: "thread-1")
 
         XCTAssertTrue(snapshot.lifecycleIsKnown)
-        XCTAssertTrue(snapshot.hasLifecycleEvidence)
-        XCTAssertTrue(snapshot.hasActiveTurn)
-        XCTAssertEqual(snapshot.activeTurnID, "turn-active")
+        XCTAssertFalse(snapshot.hasLifecycleEvidence)
+        XCTAssertFalse(snapshot.hasActiveTurn)
     }
 
     func testIncrementalScanFindsTerminalEventOutsideRecentTail() throws {
@@ -246,7 +245,7 @@ final class RolloutParserTests: XCTestCase {
                 "type": "task_started", "turn_id": "turn-active", "started_at": 1_000
             ]),
             eventLine(timestamp: "1970-01-01T00:16:41.000Z", payload: [
-                "type": "future_event", "padding": String(repeating: "x", count: 5_000)
+                "type": "future_event", "padding": String(repeating: "x", count: 1_000)
             ])
         ])
         try initialData.write(to: rolloutURL)

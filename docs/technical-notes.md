@@ -53,7 +53,10 @@ There is no synthetic completion percentage or guessed ETA.
 
 SQLite and rollout files are internal Codex implementation details. Every dashboard refresh has an observation timestamp and source-health state. Missing tables, inaccessible files, malformed tails, or an unknown schema degrade to a visible unavailable/stale state; they do not become “all done.”
 
-The repository polls locally every two seconds and skips unchanged rollout files. It never writes to the database or session files.
+The repository polls locally every two seconds and skips unchanged rollout
+files. Lifecycle recovery has a strict bounded lookback, so unusually large
+rollouts degrade to an unverified state instead of blocking app startup. The
+app never writes to the database or session files.
 
 ## Desktop handoff
 

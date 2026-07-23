@@ -54,9 +54,8 @@ struct RolloutParser: Sendable {
            previousSnapshot.lifecycleIsKnown,
            let previousFileSize,
            previousFileSize <= initialTail.fileSize {
-            let lookback = UInt64(lifecycleScanByteLimit)
-            let lowerBound = previousFileSize > lookback
-                ? previousFileSize - lookback
+            let lowerBound = previousFileSize > 0
+                ? previousFileSize - 1
                 : 0
             if let lifecycle = try latestLifecycleSnapshot(
                 at: url,
@@ -280,7 +279,14 @@ struct RolloutParser: Sendable {
         do {
             let fileSize = try handle.seekToEnd()
             let scanEnd = min(fileSize, upperBound)
-            let scanStart = min(lowerBound, scanEnd)
+            let requestedScanStart = min(lowerBound, scanEnd)
+            let maximumLookback = UInt64(lifecycleScanByteLimit)
+            let boundedScanStart = scanEnd > maximumLookback
+                ? scanEnd - maximumLookback
+                : 0
+            let scanStart = requestedScanStart > 0
+                ? requestedScanStart
+                : boundedScanStart
             let chunkSize = UInt64(lifecycleScanByteLimit)
             var cursor = scanEnd
             var trailingFragment = Data()
